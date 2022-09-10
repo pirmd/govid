@@ -1,7 +1,7 @@
 # RVID - Remote VI Daemon
 
-[![GoDoc](https://godoc.org/github.com/pirmd/rvid?status.svg)](https://godoc.org/github.com/pirmd/rvid)&nbsp; 
-[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/rvi)](https://goreportcard.com/report/github.com/pirmd/rvid)&nbsp;
+[![Go Reference](https://pkg.go.dev/badge/github.com/pirmd/rvid.svg)](https://pkg.go.dev/github.com/pirmd/rvid)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/rvi)](https://goreportcard.com/report/github.com/pirmd/rvid)
 
 `rvid` is a small web-app to remotely edit a bunch of text files in a
 as-close-as-possible vi fashion. It aims mainly at taking/reading quick notes
