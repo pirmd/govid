@@ -4,16 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="data:impage/png;base64,">
-        <link rel="stylesheet" href="/css/rvid.css" type="text/css">
+        <link rel="stylesheet" href="/css/rvid.css" type="text/css"> 
         <title>{{.Filename}}</title>
     </head>
     <body>
-        <h1>Editing <em>{{.Filename}}</em></h1>
-        <form method="POST" action="/save/{{.Filename}}">
-            <textarea id="editor" name="content" autofocus rows="20" cols="80">{{.Content}}</textarea>
-            <br>
-            <input type="submit" value="Save">
-            <label id="status" for="content"></label>
+        <form id="editorForm" method="POST" action="/save/{{.Filename}}">
+            <label id="titleBar" for="content"><h3>Editing <em>{{.Filename}}</em></h3></label>
+            <br><textarea id="editor" name="content" autofocus>{{.Content}}</textarea>
+            <div id="statusBar"><input id="saveBtn" value="Save" type="submit">&emsp;<label id="statusMsg"></label></div>
         </form>
     </body>
 
