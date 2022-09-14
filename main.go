@@ -16,6 +16,9 @@ var (
 
 	//go:embed js
 	jsFs embed.FS
+
+	//go:embed css
+	cssFs embed.FS
 )
 
 func main() {
@@ -28,6 +31,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.PathPrefix("/js").Handler(http.FileServer(http.FS(jsFs)))
+	r.PathPrefix("/css").Handler(http.FileServer(http.FS(cssFs)))
 
 	r.HandleFunc("/save/{filename}", app.SaveHandler)
 	r.HandleFunc("/{filename}", app.EditHandler)

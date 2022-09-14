@@ -4,30 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="data:impage/png;base64,">
+        <link rel="stylesheet" href="/css/rvid.css" type="text/css">
         <title>{{.Filename}}</title>
-        <style>
-@media (prefers-color-scheme: dark){
-    body {color:#fff;background:#000}
-    a:link {color:#cdf}
-    a:hover, a:visited:hover {color:#def}
-    a:visited {color:#dcf}
-}
-    body{
-        margin:1em auto;
-        max-width:40em;
-        padding:0 .62em;
-        font:1.2em/1.62 sans-serif
-    }
-    h1,h2,h3 {
-        line-height:1.2
-    }
-    @media print{
-        body{
-            max-width:none
-        }
-    }
-        </style>
-        <script src="/js/jsvim.js"></script>
     </head>
     <body>
         <h1>Editing <em>{{.Filename}}</em></h1>
@@ -38,24 +16,7 @@
             <label id="status" for="content"></label>
         </form>
     </body>
-    
-    <script>
-        window.onload = function(){
-            var editor = document.getElementById('editor')
-            if (editor != null) {
-                var vim = new VIM()
 
-                var status = document.getElementById('status')
-                if (status != null) {
-                    vim.on_set_mode = function(vi){
-                        status.innerHTML = (this.m_mode !== COMMAND) ? '-- ' + vi.m_mode + ' --' : ''
-                    }
-                }
-
-                vim.attach_to(editor)
-            }
-        }
-    </script>
-
-
+    <script src="/js/jsvim.js"></script>
+    <script src="/js/rvid.js"></script>
 </html>
