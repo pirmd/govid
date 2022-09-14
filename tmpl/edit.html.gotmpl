@@ -11,7 +11,7 @@
         <form id="editorForm" method="POST" action="/save/{{.Filename}}">
             <label id="titleBar" for="content"><h3>Editing <em>{{.Filename}}</em></h3></label>
             <br><textarea id="editor" name="content" autofocus>{{.Content}}</textarea>
-            <div id="statusBar"><input id="saveBtn" value="Save" type="submit">&emsp;<label id="statusMsg"></label></div>
+            <div id="statusBar"><input id="saveBtn" value="Save" type="submit" disabled>&emsp;<label id="statusMsg"></label></div>
         </form>
     </body>
 

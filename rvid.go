@@ -99,6 +99,4 @@ func (app *WebApp) SaveHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Saving of '%s' failed: %v", vars["filename"], err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	http.Redirect(w, r, "/"+vars["filename"], http.StatusFound)
 }
