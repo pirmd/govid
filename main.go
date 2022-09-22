@@ -49,11 +49,13 @@ func main() {
 	r.HandleFunc("/{filename}", authnHandler(app.EditHandler))
 
 	srv := &http.Server{
-		Handler:      r,
-		Addr:         *addr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		Handler:           r,
+		Addr:              *addr,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		MaxHeaderBytes:    1 << 20,
 	}
 
 	log.Println("Starting server on: ", *addr)
