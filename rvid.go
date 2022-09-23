@@ -79,6 +79,14 @@ func (app *WebApp) EditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set headers to avoid caching provided data
+	// https://stackoverflow.com/questions/49547/how-do-we-control-web-page-caching-across-all-browsers/2068407#2068407
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+	w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+	w.Header().Set("Expires", "0")                                         // Proxies.
+
+	w.Header().Add("Content-Type", "text/html; charset=UTF-8")
+
 	if err := app.Templates.ExecuteTemplate(w, "edit.html.gotmpl", note); err != nil {
 		log.Printf("Rendering of '%s' failed: %v", vars["filename"], err)
 	}
@@ -86,6 +94,8 @@ func (app *WebApp) EditHandler(w http.ResponseWriter, r *http.Request) {
 
 // SaveHandler is the http.Handler responsible for saving data to notes.
 func (app *WebApp) SaveHandler(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	content := []byte(r.FormValue("content"))
 
 	if mimetype := http.DetectContentType(content); !strings.HasPrefix(mimetype, "text/") {
