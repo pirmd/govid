@@ -37,14 +37,11 @@ input text. Once done, clicking on 'Save' will create
 $HOME/mynotes/MyNewNote.txt with the content you have enter.
 
 ## API
-`/{filename}`:: view/edit note located at {filename} path within the notes
+`GET /{filename}`:: view/edit note located at {filename} path within the notes
 directory `rvid` instance is serving.
-Limitation: {filename} starting by 'save' is not working as save is tha API to
-save note after edition.
 
-`/save/{filename}`:: save note located at {filename} path within the notes
+`POST /{filename}`:: save note located at {filename} path within the notes
 directory `rvid` instance is serving.
-Limitation:  `rvid` does not creates (yet) sub-folders.
 
 ## CREDITS
 `rvid` is using

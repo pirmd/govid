@@ -1,5 +1,7 @@
 # Changelog
+<<<<<<< HEAD
 ## [0.2.0] - not released
+- modify API for an (hopefully) cleaner edit/save access.
 - add support for basic authentication.
 
 ## [0.1.0] - 2022-09-10
