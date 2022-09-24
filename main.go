@@ -45,8 +45,10 @@ func main() {
 	r.PathPrefix("/js").Handler(http.FileServer(http.FS(jsFs)))
 	r.PathPrefix("/css").Handler(http.FileServer(http.FS(cssFs)))
 
-	r.HandleFunc("/save/{filename}", authnHandler(app.SaveHandler))
-	r.HandleFunc("/{filename}", authnHandler(app.EditHandler))
+	r.HandleFunc("/save/{filename}", authnHandler(app.SaveHandler)).
+		Methods(http.MethodPost)
+	r.HandleFunc("/{filename}", authnHandler(app.EditHandler)).
+		Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Handler:           r,
