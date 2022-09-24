@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
 	"log"
@@ -11,6 +12,12 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+)
+
+type ctxKey int
+
+const (
+	ctxUsernameKey ctxKey = iota
 )
 
 // Htpasswd represents credentials in the htpasswd format relying on a bcrypt
@@ -71,18 +78,31 @@ func (htpwd Htpasswd) Authenticate(username, password string) bool {
 
 // BasicAuthHandler provides a middleware to authenticate user against Htpasswd
 // credentials using basic authentication mechanism.
-func (htpwd Htpasswd) BasicAuthHandler(next http.HandlerFunc) http.HandlerFunc {
+func (htpwd Htpasswd) BasicAuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		if ok {
 			if htpwd.Authenticate(username, password) {
+				*r = *r.WithContext(context.WithValue(r.Context(), ctxUsernameKey, username))
+
 				next.ServeHTTP(w, r)
 				return
 			}
-			log.Printf("Unauthorized access using credential username=%s password=%s", username, password)
+			log.Printf("access failed: verification of user id '%s' not configured", username)
 		}
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="rvid restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
+}
+
+// GetUsernameFromContext retrieves a username value from a Request Context as
+// set by Htpasswd once authentication succeed.
+// Returns "-" if no username has been set.
+func GetUsernameFromContext(r *http.Request) string {
+	if username := r.Context().Value(ctxUsernameKey); username != nil {
+		return username.(string)
+	}
+
+	return "-"
 }

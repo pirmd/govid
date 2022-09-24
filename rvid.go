@@ -42,19 +42,19 @@ func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
 	}
 }
 
-// EditHandler is the http.Handler responsible of note editing.
-func (app *WebApp) EditHandler(w http.ResponseWriter, r *http.Request) {
+// EditHandlerFunc is the http.HandlerFunc responsible of note editing.
+func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	note, err := app.openNote(vars["filename"])
 	if err != nil {
-		log.Printf("Opening note '%s' failed: %v", vars["filename"], err)
+		log.Printf("opening note '%s' failed: %v", vars["filename"], err)
 		http.Error(w, fmt.Sprintf("editing '%s' failed", vars["filename"]), http.StatusInternalServerError)
 		return
 	}
 
 	if !app.isValidContentType([]byte(note.Content)) {
-		log.Printf("editing '%s': access denied, not supported mime-type", vars["filename"])
-		http.Error(w, fmt.Sprintf("editing '%s' not supported", vars["filename"]), http.StatusBadRequest)
+		log.Printf("editing '%s' denied, not allowed mime-type", vars["filename"])
+		http.Error(w, fmt.Sprintf("editing '%s' not allowed", vars["filename"]), http.StatusBadRequest)
 		return
 	}
 
@@ -67,12 +67,17 @@ func (app *WebApp) EditHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=UTF-8")
 
 	if err := app.Templates.ExecuteTemplate(w, "edit.html.gotmpl", note); err != nil {
-		log.Printf("Rendering of '%s' failed: %v", vars["filename"], err)
+		log.Printf("rendering edit template for '%s' failed: %v", vars["filename"], err)
 	}
 }
 
-// SaveHandler is the http.Handler responsible for saving data to notes.
-func (app *WebApp) SaveHandler(w http.ResponseWriter, r *http.Request) {
+// EditHandler is the http.Handler responsible of note editing.
+func (app *WebApp) EditHandler() http.Handler {
+	return http.HandlerFunc(app.EditHandlerFunc)
+}
+
+// SaveHandlerFunc is the http.HandlerFunc responsible for saving data to notes.
+func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 	content := []byte(r.FormValue("content"))
@@ -80,15 +85,20 @@ func (app *WebApp) SaveHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if !app.isValidContentType(content) {
-		log.Printf("saving '%s': access denied, not supported mime-type", vars["filename"])
-		http.Error(w, fmt.Sprintf("saving '%s' not supported", vars["filename"]), http.StatusBadRequest)
+		log.Printf("saving '%s' denied: not allowed mime-type", vars["filename"])
+		http.Error(w, fmt.Sprintf("saving '%s' not allowed", vars["filename"]), http.StatusBadRequest)
 		return
 	}
 
 	if err := app.Storage.WriteFile(vars["filename"], content, 0660); err != nil {
-		log.Printf("Saving of '%s' failed: %v", vars["filename"], err)
+		log.Printf("saving '%s' failed: %v", vars["filename"], err)
 		http.Error(w, fmt.Sprintf("saving '%s' failed", vars["filename"]), http.StatusInternalServerError)
 	}
+}
+
+// SaveHandler is the http.Handler responsible for saving data to notes.
+func (app *WebApp) SaveHandler() http.Handler {
+	return http.HandlerFunc(app.SaveHandlerFunc)
 }
 
 func (app *WebApp) openNote(filename string) (*Note, error) {

@@ -28,7 +28,7 @@ rvid -help
 
 Run rvid by
 ``` shell
-./rvid -dir $HOME/mynotes
+./rvid $HOME/mynotes
 ```
 
 then visiting http://localhost:8080/MyNewNote.txt should

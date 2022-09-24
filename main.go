@@ -3,14 +3,20 @@ package main
 import (
 	"embed"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gorilla/mux"
 )
 
 var (
+	myname    = filepath.Base(os.Args[0])
+	myversion = "v?.?.?-?" //should be set using: go build -ldflags "-X main.myversion=X.X.X"
+
 	//go:embed tmpl
 	tmplFs embed.FS
 
@@ -23,9 +29,23 @@ var (
 
 func main() {
 	addr := flag.String("address", "localhost:8080", "TCP network address to listen to")
-	dir := flag.String("dir", "./notes", "folder that contains notes")
 	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd-like file containing access credentials expected to use bcrypt-based password hash. (default no authentication)")
+
+	log.Printf("Running %s version %s", myname, myversion)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [option...] NOTES_DIR\n", myname)
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
+
+	if flag.NArg() != 1 {
+		log.Fatalf("invalid number of argument(s)\nRun %s -help", myname)
+	}
+
+	notesdir := flag.Arg(0)
+	log.Println("Serving notes from: ", notesdir)
 
 	authnHandler := noopHandler
 	if *htpasswdfile != "" {
@@ -38,16 +58,15 @@ func main() {
 		authnHandler = htpasswd.BasicAuthHandler
 	}
 
-	log.Println("Serving notes from: ", *dir)
-	app := NewWebApp(NewDirFS(*dir), tmplFs)
+	app := NewWebApp(NewDirFS(notesdir), tmplFs)
 
 	r := mux.NewRouter()
 	r.PathPrefix("/js").Handler(http.FileServer(http.FS(jsFs)))
 	r.PathPrefix("/css").Handler(http.FileServer(http.FS(cssFs)))
 
-	r.HandleFunc("/{filename}", authnHandler(app.EditHandler)).
+	r.Handle("/{filename}", loggingHandler(authnHandler(app.EditHandler()))).
 		Methods(http.MethodGet)
-	r.HandleFunc("/{filename}", authnHandler(app.SaveHandler)).
+	r.Handle("/{filename}", loggingHandler(authnHandler(app.SaveHandler()))).
 		Methods(http.MethodPost)
 
 	srv := &http.Server{

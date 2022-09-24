@@ -1,6 +1,7 @@
 # Changelog
 <<<<<<< HEAD
 ## [0.2.0] - not released
+- change the way to specify folder that contain notes from command-line.
 - modify API for an (hopefully) cleaner edit/save access.
 - add support for basic authentication.
 
