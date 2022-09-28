@@ -91,7 +91,7 @@ func (htpwd Htpasswd) BasicAuthHandler(next http.Handler) http.Handler {
 			log.Printf("access failed: verification of user id '%s' not configured", username)
 		}
 
-		w.Header().Set("WWW-Authenticate", `Basic realm="rvid restricted", charset="UTF-8"`)
+		w.Header().Set("WWW-Authenticate", `Basic realm="govid restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
 }

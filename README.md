@@ -1,9 +1,9 @@
-# RVID - Remote VI Daemon
+# GOVID - Go VI Daemon
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/pirmd/rvid.svg)](https://pkg.go.dev/github.com/pirmd/rvid)
-[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/rvi)](https://goreportcard.com/report/github.com/pirmd/rvid)
+[![Go Reference](https://pkg.go.dev/badge/github.com/pirmd/govid.svg)](https://pkg.go.dev/github.com/pirmd/govid)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/rvi)](https://goreportcard.com/report/github.com/pirmd/govid)
 
-`rvid` is a small web-app to remotely edit a bunch of text files in a
+`govid` is a small web-app to remotely edit a bunch of text files in a
 as-close-as-possible vi fashion. It aims mainly at taking/reading quick notes
 in environment I'm not in control of (i.e. no ssh to my cloud server, or no vi)
 using a simple browser.
@@ -17,18 +17,18 @@ file you'll like to edit, authenticate, edit it).
 ## INSTALLATION
 With golang binary installed on your system, you just need to run:
 ̀``shell
-go install github.com/pirmd/rvid
+go install github.com/pirmd/govid
 ```
 
 ## USAGE
-Usage can be obtained from `rvid`'s command line by running:
+Usage can be obtained from `govid`'s command line by running:
 ``` shell
-rvid -help
+govid -help
 ```
 
-Run rvid by
+Run govid by
 ``` shell
-./rvid $HOME/mynotes
+./govid $HOME/mynotes
 ```
 
 then visiting http://localhost:8080/MyNewNote.txt should
@@ -38,13 +38,13 @@ $HOME/mynotes/MyNewNote.txt with the content you have enter.
 
 ## API
 `GET /{filename}`:: view/edit note located at {filename} path within the notes
-directory `rvid` instance is serving.
+directory `govid` instance is serving.
 
 `POST /{filename}`:: save note located at {filename} path within the notes
-directory `rvid` instance is serving.
+directory `govid` instance is serving.
 
 ## CREDITS
-`rvid` is using
+`govid` is using
 [vim-in-textarea](https://github.com/jakub-m/vim-in-textarea) from
 [Jakub Mikians](https://github.com/jakub-m) that offers a simple
 and efficient way to interact with a textarea in a vim-like

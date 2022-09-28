@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Note represents a file that rvid knows how to interact with.
+// Note represents a file that govid knows how to interact with.
 type Note struct {
 	Filename string
 	Content  []byte
@@ -24,20 +24,20 @@ func (n Note) Text() string {
 	return string(n.Content)
 }
 
-// WebApp represents rvid application.
+// WebApp represents govid application.
 type WebApp struct {
 	Storage   WriteFS
 	Templates *template.Template
 }
 
-// NewWebApp creates a new WebApp providing rvid services. It intaracts with
+// NewWebApp creates a new WebApp providing govid services. It interacts with
 // files found in noteFS and uses html templates from 'tmpl' folder found
 // within tmplFs.
 func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
 	return &WebApp{
 		Storage: noteFs,
 		Templates: template.Must(
-			template.New("rvid").ParseFS(tmplFs, "tmpl/edit.html.gotmpl"),
+			template.New("govid").ParseFS(tmplFs, "tmpl/edit.html.gotmpl"),
 		),
 	}
 }
