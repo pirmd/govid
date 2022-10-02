@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -45,16 +46,18 @@ func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
 // EditHandlerFunc is the http.HandlerFunc responsible of note editing.
 func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	note, err := app.openNote(vars["filename"])
+	filename := app.sanitizeFilename(vars["filename"])
+
+	note, err := app.openNote(filename)
 	if err != nil {
-		log.Printf("opening note '%s' failed: %v", vars["filename"], err)
-		http.Error(w, fmt.Sprintf("editing '%s' failed", vars["filename"]), http.StatusInternalServerError)
+		log.Printf("opening note '%s' failed: %v", filename, err)
+		http.Error(w, fmt.Sprintf("editing '%s' failed", filename), http.StatusInternalServerError)
 		return
 	}
 
 	if !app.isValidContentType([]byte(note.Content)) {
-		log.Printf("editing '%s' denied, not allowed mime-type", vars["filename"])
-		http.Error(w, fmt.Sprintf("editing '%s' not allowed", vars["filename"]), http.StatusBadRequest)
+		log.Printf("editing '%s' denied, not allowed mime-type", filename)
+		http.Error(w, fmt.Sprintf("editing '%s' not allowed", filename), http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +70,7 @@ func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=UTF-8")
 
 	if err := app.Templates.ExecuteTemplate(w, "edit.html.gotmpl", note); err != nil {
-		log.Printf("rendering edit template for '%s' failed: %v", vars["filename"], err)
+		log.Printf("rendering edit template for '%s' failed: %v", filename, err)
 	}
 }
 
@@ -83,16 +86,17 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	content := []byte(r.FormValue("content"))
 
 	vars := mux.Vars(r)
+	filename := app.sanitizeFilename(vars["filename"])
 
 	if !app.isValidContentType(content) {
-		log.Printf("saving '%s' denied: not allowed mime-type", vars["filename"])
-		http.Error(w, fmt.Sprintf("saving '%s' not allowed", vars["filename"]), http.StatusBadRequest)
+		log.Printf("saving '%s' denied: not allowed mime-type", filename)
+		http.Error(w, fmt.Sprintf("saving '%s' not allowed", filename), http.StatusBadRequest)
 		return
 	}
 
 	if err := app.Storage.WriteFile(vars["filename"], content, 0660); err != nil {
 		log.Printf("saving '%s' failed: %v", vars["filename"], err)
-		http.Error(w, fmt.Sprintf("saving '%s' failed", vars["filename"]), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
 	}
 }
 
@@ -133,4 +137,16 @@ func (app *WebApp) openNote(filename string) (*Note, error) {
 func (app *WebApp) isValidContentType(content []byte) bool {
 	mimetype := http.DetectContentType(content)
 	return strings.HasPrefix(mimetype, "text/")
+}
+
+func (app *WebApp) sanitizeFilename(filename string) string {
+	// TODO: check if it is needed, as DirFS might already prevent path
+	// traversal risks
+
+	cleaned := path.Clean(path.Join("/", filename))
+
+	// remove the root slash that was added in the previous step and that DirFS is not found of
+	_, file := path.Split(cleaned)
+
+	return file
 }
