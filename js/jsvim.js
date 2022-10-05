@@ -239,7 +239,10 @@ function VIM(ctrees) {
   }
 
   this.set_text = function(tx) {
-    this.m_selector.value = tx
+      this.m_selector.value = tx
+
+      const event = new Event("input")
+      this.m_selector.dispatchEvent(event);
   }
 
   this.set_pos = function(k) {
