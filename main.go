@@ -9,8 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -28,7 +26,7 @@ var (
 )
 
 func main() {
-	addr := flag.String("address", "localhost:8080", "TCP network address to listen to")
+	addr := flag.String("address", "localhost:8888", "TCP network address to listen to")
 	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd-like file containing access credentials expected to use bcrypt-based password hash. (default no authentication)")
 
 	log.Printf("Running %s version %s", myname, myversion)
@@ -58,19 +56,27 @@ func main() {
 		authnHandler = htpasswd.BasicAuthHandler
 	}
 
-	app := NewWebApp(NewDirFS(notesdir), tmplFs)
+	mux := http.NewServeMux()
+	mux.Handle("/js/", http.FileServer(http.FS(jsFs)))
+	mux.Handle("/css/", http.FileServer(http.FS(cssFs)))
+	mux.Handle("/", loggingHandler(authnHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app := NewWebApp(NewDirFS(notesdir), tmplFs)
 
-	r := mux.NewRouter()
-	r.PathPrefix("/js").Handler(http.FileServer(http.FS(jsFs)))
-	r.PathPrefix("/css").Handler(http.FileServer(http.FS(cssFs)))
+		switch r.Method {
+		case http.MethodGet:
+			app.EditHandlerFunc(w, r)
 
-	r.Handle("/{filename}", loggingHandler(authnHandler(app.EditHandler()))).
-		Methods(http.MethodGet)
-	r.Handle("/{filename}", loggingHandler(authnHandler(app.SaveHandler()))).
-		Methods(http.MethodPost)
+		case http.MethodPost:
+			app.SaveHandlerFunc(w, r)
+
+		default:
+			w.Header().Set("Allow", "GET, POST")
+			http.Error(w, "method "+r.Method+"is not allowed", http.StatusMethodNotAllowed)
+		}
+	}))))
 
 	srv := &http.Server{
-		Handler:           r,
+		Handler:           mux,
 		Addr:              *addr,
 		ReadTimeout:       5 * time.Second,
 		WriteTimeout:      10 * time.Second,

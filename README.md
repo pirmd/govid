@@ -40,10 +40,17 @@ Run govid by
 ./govid $HOME/mynotes
 ```
 
-then visiting http://localhost:8080/MyNewNote.txt should bring you to a vi-like
+then visiting http://localhost:8888/MyNewNote.txt should bring you to a vi-like
 text editing form where you can input text. Once done, clicking on 'Save' or
 input ':w' in COMMAND mode will create $HOME/mynotes/MyNewNote.txt with the
 content you have enter.
+
+## API
+`GET /{filename}`:: view/edit note located at {filename} path within the notes
+directory `govid` instance is serving.
+
+`POST /{filename}`:: save note located at {filename} path within the notes
+directory `govid` instance is serving.
 
 ## DEPLOYEMENT
 
@@ -52,7 +59,7 @@ relayd.conf(5):
 ``` shell
 public_ipv4="WWW.XXX.YYY.ZZZ"
 table <govid> { 127.0.0.1 }
-govid_port="8080"
+govid_port="8888"
 
 http protocol "https_reverse_proxy" {
     match header set "X-Client-IP" value "$REMOTE_ADDR:$REMOTE_PORT"
@@ -101,7 +108,7 @@ cp /usr/lib/libpthread.so.26.1 /var/govid/usr/lib/
 mkdir -p /var/govid/usr/libexec && cp /usr/libexec/ld.so /var/govid/usr/libexec/
 mkdir -p /var/govid/bin && cp /usr/local/bin/govid /var/govid/bin/
 
-chroot -u _govid -g _govid /var/govid /bin/govid --address 127.0.0.1:8080 -htpasswd ./htpasswd ./notes >> ./log/access.log
+chroot -u _govid -g _govid /var/govid /bin/govid --address 127.0.0.1:8888 -htpasswd ./htpasswd ./notes >> ./log/access.log
 ```
 
 ## API

@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"path"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 // Note represents a file that govid knows how to interact with.
@@ -45,8 +43,7 @@ func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
 
 // EditHandlerFunc is the http.HandlerFunc responsible of note editing.
 func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	filename := app.sanitizeFilename(vars["filename"])
+	filename := app.sanitizeFilename(r.URL.Path)
 
 	note, err := app.openNote(filename)
 	if err != nil {
@@ -74,19 +71,12 @@ func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// EditHandler is the http.Handler responsible of note editing.
-func (app *WebApp) EditHandler() http.Handler {
-	return http.HandlerFunc(app.EditHandlerFunc)
-}
-
 // SaveHandlerFunc is the http.HandlerFunc responsible for saving data to notes.
 func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 	content := []byte(r.FormValue("content"))
-
-	vars := mux.Vars(r)
-	filename := app.sanitizeFilename(vars["filename"])
+	filename := app.sanitizeFilename(r.URL.Path)
 
 	if !app.isValidContentType(content) {
 		log.Printf("saving '%s' denied: not allowed mime-type", filename)
@@ -94,15 +84,10 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := app.Storage.WriteFile(vars["filename"], content, 0660); err != nil {
-		log.Printf("saving '%s' failed: %v", vars["filename"], err)
+	if err := app.Storage.WriteFile(filename, content, 0660); err != nil {
+		log.Printf("saving '%s' failed: %v", filename, err)
 		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
 	}
-}
-
-// SaveHandler is the http.Handler responsible for saving data to notes.
-func (app *WebApp) SaveHandler() http.Handler {
-	return http.HandlerFunc(app.SaveHandlerFunc)
 }
 
 func (app *WebApp) openNote(filename string) (*Note, error) {
@@ -142,11 +127,8 @@ func (app *WebApp) isValidContentType(content []byte) bool {
 func (app *WebApp) sanitizeFilename(filename string) string {
 	// TODO: check if it is needed, as DirFS might already prevent path
 	// traversal risks
-
 	cleaned := path.Clean(path.Join("/", filename))
 
 	// remove the root slash that was added in the previous step and that DirFS is not found of
-	_, file := path.Split(cleaned)
-
-	return file
+	return cleaned[1:]
 }
