@@ -60,7 +60,7 @@ func main() {
 	mux.Handle("/js/", http.FileServer(http.FS(jsFs)))
 	mux.Handle("/css/", http.FileServer(http.FS(cssFs)))
 	mux.Handle("/", loggingHandler(authnHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app := NewWebApp(NewDirFS(notesdir), tmplFs)
+		app := NewWebApp(notesdir, tmplFs)
 
 		switch r.Method {
 		case http.MethodGet:

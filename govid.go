@@ -7,7 +7,9 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"path"
+	"runtime"
 	"strings"
 )
 
@@ -25,16 +27,16 @@ func (n Note) Text() string {
 
 // WebApp represents govid application.
 type WebApp struct {
-	Storage   WriteFS
+	NotesDir  string
 	Templates *template.Template
 }
 
 // NewWebApp creates a new WebApp providing govid services. It interacts with
-// files found in noteFS and uses html templates from 'tmpl' folder found
-// within tmplFs.
-func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
+// files found in notedir folder and uses html templates from 'tmpl' folder
+// found within tmplFs.
+func NewWebApp(notesdir string, tmplFs fs.FS) *WebApp {
 	return &WebApp{
-		Storage: noteFs,
+		NotesDir: notesdir,
 		Templates: template.Must(
 			template.New("govid").ParseFS(tmplFs, "tmpl/edit.html.gotmpl"),
 		),
@@ -43,7 +45,12 @@ func NewWebApp(noteFs WriteFS, tmplFs fs.FS) *WebApp {
 
 // EditHandlerFunc is the http.HandlerFunc responsible of note editing.
 func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	filename := app.sanitizeFilename(r.URL.Path)
+	filename, err := app.sanitizeFilename(r.URL.Path)
+	if err != nil {
+		log.Printf("filename '%s' is invalid: %v", filename, err)
+		http.Error(w, fmt.Sprintf("editing '%s' failed", filename), http.StatusBadRequest)
+		return
+	}
 
 	note, err := app.openNote(filename)
 	if err != nil {
@@ -76,7 +83,13 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 	content := []byte(r.FormValue("content"))
-	filename := app.sanitizeFilename(r.URL.Path)
+
+	filename, err := app.sanitizeFilename(r.URL.Path)
+	if err != nil {
+		log.Printf("filename '%s' is invalid: %v", filename, err)
+		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusBadRequest)
+		return
+	}
 
 	if !app.isValidContentType(content) {
 		log.Printf("saving '%s' denied: not allowed mime-type", filename)
@@ -84,21 +97,28 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := app.Storage.WriteFile(filename, content, 0660); err != nil {
+	fullpath := app.fullpath(filename)
+	if err := os.MkdirAll(path.Dir(fullpath), os.ModePerm); err != nil {
+		log.Printf("saving '%s' failed: %v", filename, err)
+		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
+		return
+	}
+
+	if err := os.WriteFile(fullpath, content, os.ModePerm); err != nil {
 		log.Printf("saving '%s' failed: %v", filename, err)
 		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
 	}
 }
 
 func (app *WebApp) openNote(filename string) (*Note, error) {
-	fi, err := fs.Stat(app.Storage, filename)
+	fullpath := app.fullpath(filename)
+
+	fi, err := os.Stat(fullpath)
 	if err != nil {
-		if perr, ok := err.(*fs.PathError); ok {
-			if errors.Is(perr.Err, fs.ErrNotExist) {
-				return &Note{
-					Filename: filename,
-				}, nil
-			}
+		if os.IsNotExist(err) {
+			return &Note{
+				Filename: filename,
+			}, nil
 		}
 
 		return nil, err
@@ -108,7 +128,7 @@ func (app *WebApp) openNote(filename string) (*Note, error) {
 		return nil, errors.New("non supported type")
 	}
 
-	content, err := fs.ReadFile(app.Storage, filename)
+	content, err := os.ReadFile(fullpath) //#nosec G304 -- fullpath is sanitized using app.fullpath
 	if err != nil {
 		return nil, err
 	}
@@ -124,11 +144,29 @@ func (app *WebApp) isValidContentType(content []byte) bool {
 	return strings.HasPrefix(mimetype, "text/")
 }
 
-func (app *WebApp) sanitizeFilename(filename string) string {
-	// TODO: check if it is needed, as DirFS might already prevent path
-	// traversal risks
-	cleaned := path.Clean(path.Join("/", filename))
+func (app *WebApp) sanitizeFilename(filename string) (string, error) {
+	cleaned := path.Clean(path.Join("/", filename))[1:]
 
-	// remove the root slash that was added in the previous step and that DirFS is not found of
-	return cleaned[1:]
+	if !fs.ValidPath(cleaned) || runtime.GOOS == "windows" && containsAny(cleaned, `\:`) {
+		return "", os.ErrInvalid
+	}
+
+	return cleaned, nil
+}
+
+func (app *WebApp) fullpath(filename string) string {
+	// TODO: check if it is overkill as sanitizeFilename shall already have
+	// ensure that filename is reasonable
+	return path.Join(app.NotesDir, path.Clean("/"+filename))
+}
+
+func containsAny(s, chars string) bool {
+	for i := 0; i < len(s); i++ {
+		for j := 0; j < len(chars); j++ {
+			if s[i] == chars[j] {
+				return true
+			}
+		}
+	}
+	return false
 }
