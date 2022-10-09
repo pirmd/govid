@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
@@ -47,21 +46,21 @@ func NewWebApp(notesdir string, tmplFs fs.FS) *WebApp {
 func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	filename, err := app.sanitizeFilename(r.URL.Path)
 	if err != nil {
-		log.Printf("filename '%s' is invalid: %v", filename, err)
-		http.Error(w, fmt.Sprintf("editing '%s' failed", filename), http.StatusBadRequest)
+		log.Printf("editing '%s' failed: %v", filename, err)
+		http.Error(w, "edit not possible", http.StatusBadRequest)
 		return
 	}
 
 	note, err := app.openNote(filename)
 	if err != nil {
-		log.Printf("opening note '%s' failed: %v", filename, err)
-		http.Error(w, fmt.Sprintf("editing '%s' failed", filename), http.StatusInternalServerError)
+		log.Printf("editing '%s' failed: %v", filename, err)
+		http.Error(w, "edit not possible", http.StatusBadRequest)
 		return
 	}
 
 	if !app.isValidContentType([]byte(note.Content)) {
-		log.Printf("editing '%s' denied, not allowed mime-type", filename)
-		http.Error(w, fmt.Sprintf("editing '%s' not allowed", filename), http.StatusBadRequest)
+		log.Printf("editing '%s' failed: not allowed mime-type", filename)
+		http.Error(w, "edit not supported", http.StatusBadRequest)
 		return
 	}
 
@@ -86,27 +85,27 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	filename, err := app.sanitizeFilename(r.URL.Path)
 	if err != nil {
-		log.Printf("filename '%s' is invalid: %v", filename, err)
-		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusBadRequest)
+		log.Printf("saving '%s' failed: %v", filename, err)
+		http.Error(w, "save not possible", http.StatusBadRequest)
 		return
 	}
 
 	if !app.isValidContentType(content) {
-		log.Printf("saving '%s' denied: not allowed mime-type", filename)
-		http.Error(w, fmt.Sprintf("saving '%s' not allowed", filename), http.StatusBadRequest)
+		log.Printf("saving '%s' failed: not allowed mime-type", filename)
+		http.Error(w, "save not supported", http.StatusBadRequest)
 		return
 	}
 
 	fullpath := app.fullpath(filename)
 	if err := os.MkdirAll(path.Dir(fullpath), os.ModePerm); err != nil {
 		log.Printf("saving '%s' failed: %v", filename, err)
-		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
+		http.Error(w, "save failed", http.StatusInternalServerError)
 		return
 	}
 
 	if err := os.WriteFile(fullpath, content, os.ModePerm); err != nil {
 		log.Printf("saving '%s' failed: %v", filename, err)
-		http.Error(w, fmt.Sprintf("saving '%s' failed", filename), http.StatusInternalServerError)
+		http.Error(w, "save failed", http.StatusInternalServerError)
 	}
 }
 
@@ -125,7 +124,7 @@ func (app *WebApp) openNote(filename string) (*Note, error) {
 	}
 
 	if fi.IsDir() {
-		return nil, errors.New("non supported type")
+		return nil, errors.New("is a directory")
 	}
 
 	content, err := os.ReadFile(fullpath) //#nosec G304 -- fullpath is sanitized using app.fullpath

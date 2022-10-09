@@ -51,7 +51,7 @@ func TestEditHandler(t *testing.T) {
 		{"subdir/newnote", http.StatusOK, "subdir/newnote"},
 		{"newsubdir/newnote", http.StatusOK, "newsubdir/newnote"},
 		{"../htpasswd", http.StatusOK, "htpasswd"},
-		{"subdir", http.StatusInternalServerError, ""},
+		{"subdir", http.StatusBadRequest, ""},
 		{"", http.StatusBadRequest, ""},
 		{"1.gif", http.StatusBadRequest, "1.gif"},
 	}
