@@ -119,13 +119,15 @@ func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fullpath := app.fullpath(filename)
-	if err := os.MkdirAll(path.Dir(fullpath), os.ModePerm); err != nil {
+	//#nosec G301 -- O777 is here to let user's umask do its job
+	if err := os.MkdirAll(path.Dir(fullpath), 0777); err != nil {
 		log.Printf("saving '%s' failed: %v", filename, err)
 		http.Error(w, "save failed", http.StatusInternalServerError)
 		return
 	}
 
-	if err := os.WriteFile(fullpath, content, os.ModePerm); err != nil {
+	//#nosec G306 -- O666 is here to let user's umask do its job
+	if err := os.WriteFile(fullpath, content, 0666); err != nil {
 		log.Printf("saving '%s' failed: %v", filename, err)
 		http.Error(w, "save failed", http.StatusInternalServerError)
 	}
