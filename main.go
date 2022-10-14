@@ -15,9 +15,6 @@ var (
 	myname    = filepath.Base(os.Args[0])
 	myversion = "v?.?.?-?" //should be set using: go build -ldflags "-X main.myversion=X.X.X"
 
-	//go:embed tmpl
-	tmplFs embed.FS
-
 	//go:embed js
 	jsFs embed.FS
 
@@ -60,7 +57,7 @@ func main() {
 	mux.Handle("/js/", http.FileServer(http.FS(jsFs)))
 	mux.Handle("/css/", http.FileServer(http.FS(cssFs)))
 	mux.Handle("/", loggingHandler(authnHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app := NewWebApp(notesdir, tmplFs)
+		app := NewWebApp(notesdir)
 
 		switch r.Method {
 		case http.MethodGet:

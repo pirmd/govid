@@ -27,7 +27,7 @@ func TestFullpath(t *testing.T) {
 		{"test/../../test1", path.Join("root", "test1")},
 	}
 
-	testApp := NewWebApp("root", tmplFs)
+	testApp := NewWebApp("root")
 	for _, tc := range testCases {
 		got := testApp.fullpath(tc.in)
 		if got != tc.want {
@@ -79,7 +79,7 @@ func TestEditHandler(t *testing.T) {
 			}
 
 			want := new(bytes.Buffer)
-			if err := testApp.Templates.ExecuteTemplate(want, "edit.html.gotmpl", &Note{tc.outName, []byte(testNotes[tc.outName])}); err != nil {
+			if err := testApp.Templates.ExecuteTemplate(want, editTemplateName, &Note{tc.outName, []byte(testNotes[tc.outName])}); err != nil {
 				t.Fatalf("rendering edit template for '%s' failed: %v", tc.inFilename, err)
 			}
 
@@ -188,5 +188,5 @@ func setup(t *testing.T) (*WebApp, map[string]string) {
 		}
 	}
 
-	return NewWebApp(notesdir, tmplFs), testCases
+	return NewWebApp(notesdir), testCases
 }

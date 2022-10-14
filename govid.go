@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"embed"
 	"errors"
 	"html/template"
 	"io/fs"
@@ -10,6 +12,17 @@ import (
 	"path"
 	"runtime"
 	"strings"
+)
+
+const (
+	// editTemplateName is the name of template in tmplFS to use to render note
+	// for edition.
+	editTemplateName = "edit.html.gotmpl"
+)
+
+var (
+	//go:embed templates/*.gotmpl
+	tmplFS embed.FS
 )
 
 // Note represents a file that govid knows how to interact with.
@@ -30,14 +43,13 @@ type WebApp struct {
 	Templates *template.Template
 }
 
-// NewWebApp creates a new WebApp providing govid services. It interacts with
-// files found in notedir folder and uses html templates from 'tmpl' folder
-// found within tmplFs.
-func NewWebApp(notesdir string, tmplFs fs.FS) *WebApp {
+// NewWebApp creates a new WebApp providing govid services for notes found in notesdir.
+// Notes content are rendered using templates from tmplFS's 'templates' subdir.
+func NewWebApp(notesdir string) *WebApp {
 	return &WebApp{
 		NotesDir: notesdir,
 		Templates: template.Must(
-			template.New("govid").ParseFS(tmplFs, "tmpl/edit.html.gotmpl"),
+			template.New("govid").ParseFS(tmplFS, "templates/*.gotmpl"),
 		),
 	}
 }
@@ -72,8 +84,15 @@ func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/html; charset=UTF-8")
 
-	if err := app.Templates.ExecuteTemplate(w, "edit.html.gotmpl", note); err != nil {
+	buf := new(bytes.Buffer)
+	if err := app.Templates.ExecuteTemplate(buf, editTemplateName, note); err != nil {
 		log.Printf("rendering edit template for '%s' failed: %v", filename, err)
+		http.Error(w, "rendering note content failed", http.StatusInternalServerError)
+	}
+
+	if _, err = buf.WriteTo(w); err != nil {
+		log.Printf("rendering edit template for '%s' failed: %v", filename, err)
+		http.Error(w, "rendering note content failed", http.StatusInternalServerError)
 	}
 }
 
