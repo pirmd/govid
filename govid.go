@@ -18,6 +18,9 @@ const (
 	// editTemplateName is the name of template in tmplFS to use to render note
 	// for edition.
 	editTemplateName = "edit.html.gotmpl"
+
+	// maxNoteSize defines the acceptable limit in size for note
+	maxNoteSize int64 = 1 << 20
 )
 
 var (
@@ -98,7 +101,7 @@ func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 // SaveHandlerFunc is the http.HandlerFunc responsible for saving data to notes.
 func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	r.Body = http.MaxBytesReader(w, r.Body, maxNoteSize)
 
 	content := []byte(r.FormValue("content"))
 
@@ -144,6 +147,10 @@ func (app *WebApp) openNote(filename string) (*Note, error) {
 
 	if fi.IsDir() {
 		return nil, errors.New("is a directory")
+	}
+
+	if fi.Size() > maxNoteSize {
+		return nil, errors.New("is too big")
 	}
 
 	content, err := os.ReadFile(fullpath) //#nosec G304 -- fullpath is sanitized using app.fullpath
