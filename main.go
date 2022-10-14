@@ -24,10 +24,9 @@ func main() {
 	addr := flag.String("address", "localhost:8888", "TCP network address to listen to")
 	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd-like file containing access credentials expected to use bcrypt-based password hash. (default no authentication)")
 
-	log.Printf("Running %s version %s", myname, myversion)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [option...] NOTES_DIR\n", myname)
-		fmt.Fprintf(os.Stderr, "Options:\n")
+		fmt.Fprintln(os.Stderr, "Options:")
 		flag.PrintDefaults()
 	}
 
@@ -38,6 +37,8 @@ func main() {
 	}
 
 	notesdir := flag.Arg(0)
+
+	log.Printf("Running %s version %s", myname, myversion)
 	log.Println("Serving notes from: ", notesdir)
 
 	authnHandler := noopHandler
