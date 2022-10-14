@@ -15,11 +15,9 @@ var (
 	myname    = filepath.Base(os.Args[0])
 	myversion = "v?.?.?-?" //should be set using: go build -ldflags "-X main.myversion=X.X.X"
 
-	//go:embed js
-	jsFs embed.FS
-
-	//go:embed css
-	cssFs embed.FS
+	//go:embed static/js/*.js
+	//go:embed static/css/*.css
+	staticFS embed.FS
 )
 
 func main() {
@@ -54,8 +52,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/js/", http.FileServer(http.FS(jsFs)))
-	mux.Handle("/css/", http.FileServer(http.FS(cssFs)))
+	mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
 	mux.Handle("/", loggingHandler(authnHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app := NewWebApp(notesdir)
 
