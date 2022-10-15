@@ -54,5 +54,5 @@ window.onload = function() {
     );
 
     vim.attach_to(editor);
-    editor.focus();
+    saveBtn.disabled = true;
 }
