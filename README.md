@@ -40,17 +40,10 @@ Run govid by
 ./govid $HOME/mynotes
 ```
 
-then visiting http://localhost:8888/MyNewNote.txt should bring you to a vi-like
+then visiting http://localhost:8080/MyNewNote.txt should bring you to a vi-like
 text editing form where you can input text. Once done, clicking on 'Save' or
 input ':w' in COMMAND mode will create $HOME/mynotes/MyNewNote.txt with the
 content you have enter.
-
-## API
-`GET /{filename}`:: view/edit note located at {filename} path within the notes
-directory `govid` instance is serving.
-
-`POST /{filename}`:: save note located at {filename} path within the notes
-directory `govid` instance is serving.
 
 ## DEPLOYEMENT
 
@@ -59,7 +52,7 @@ relayd.conf(5):
 ``` shell
 public_ipv4="WWW.XXX.YYY.ZZZ"
 table <govid> { 127.0.0.1 }
-govid_port="8888"
+govid_port="8080"
 
 http protocol "https_reverse_proxy" {
     match header set "X-Client-IP" value "$REMOTE_ADDR:$REMOTE_PORT"
@@ -108,7 +101,7 @@ cp /usr/lib/libpthread.so.26.1 /var/govid/usr/lib/
 mkdir -p /var/govid/usr/libexec && cp /usr/libexec/ld.so /var/govid/usr/libexec/
 mkdir -p /var/govid/bin && cp /usr/local/bin/govid /var/govid/bin/
 
-chroot -u _govid -g _govid /var/govid /bin/govid --address 127.0.0.1:8888 -htpasswd ./htpasswd ./notes >> ./log/access.log
+chroot -u _govid -g _govid /var/govid /bin/govid --address 127.0.0.1:8080 -htpasswd ./htpasswd ./notes >> ./log/access.log
 ```
 
 ## API
@@ -119,12 +112,35 @@ directory `govid` instance is serving.
 + `POST /{filename}`:: save note located at {filename} path within the notes
 directory `govid` instance is serving.
 
+`govid` only accepts {filename} that lives inside govid's notes directory, it
+will silently 'clean' any path directives (like ../ or absolute path) that will
+try to save or access document outside of this folder.
+
+Nota: `govid` is not going to detect some sophisticated way to 'escape' notes's
+folder like using symlinks. It is up to the user to make sure (s)he feels
+conformtable in case of serving a folder with existing symlinks.
+
+If {filename} points to a non-existing note, it will be created once saving,
+including any sub-folders. Notes and sub-folders are created using the umask of
+the user under which `govid` is running.
+
+Requests for {filename} pointing to files that are not of plaintext mime-type
+will fail.
+
+Requests for accessing too big files or trying to save too big content will be
+refused.
+
+Limitation: static resources are served from `/static/` path so that {filename}
+living inside a `/static` dir are not accessible through this API.
+
+
 ## CREDITS
 `govid` is using
 [vim-in-textarea](https://github.com/jakub-m/vim-in-textarea) from
 [Jakub Mikians](https://github.com/jakub-m) that offers a simple
 and efficient way to interact with a textarea in a vim-like
 fashion. Thanks to him!
+
 
 ## CONTRIBUTION
 If you feel like to contribute, just follow github guidelines on
