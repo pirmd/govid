@@ -3,22 +3,13 @@ html, body {
     margin: 0
 }
 #editorForm {
+    font: 1.2em/1.62 monospace;
+    height: 100%;
     display: flex;
-    flex-flow: column;
-    height: 100%
-}
-#titleBar, #statusBar {
-    flex: 0 1 auto
+    flex-flow: column
 }
 #editor {
-    resize: none;
-    flex: 1 1 auto
-}
-
-body{
-    font:1.2em/1.62 sans-serif
-}
-
-h1,h2,h3 {
-    line-height:1.2
+    font: inherit;
+    flex: 1 1 auto;
+    resize: none
 }
