@@ -8,9 +8,9 @@
         <title>{{.Filename}}</title>
     </head>
     <body>
-        <form id="editorForm" method="POST" action="/{{.Filename}}">
-            <textarea id="editor" name="content" autofocus>{{.Text}}</textarea>
-            <div><input id="saveBtn" value="Save" type="submit">&emsp;<label id="statusMsg"></label></div>
+        <form method="POST" action="/{{.Filename}}">
+            <textarea name="content" autofocus>{{.Text}}</textarea>
+            <div><input value="Save" type="submit">&emsp;<span id="status"></span></div>
         </form>
     </body>
 

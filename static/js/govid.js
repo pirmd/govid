@@ -1,58 +1,68 @@
-const editorForm = document.getElementById('editorForm')
-const editor = document.getElementById('editor')
-const saveBtn = document.getElementById('saveBtn')
-const statusMsg = document.getElementById('statusMsg')
+var editor = (function() {
+    "use strict";
 
-editor.addEventListener('input', function() {
-    saveBtn.disabled = false;
-});
+    const _form = document.querySelector("form");
+    const _content = _form.querySelector("textarea[name=content]");
+    const _submit = _form.querySelector("input[type=submit]");
+    const _status = _form.querySelector("#status");
 
-async function save_editor_content() {
-    try {
-        let response = await fetch(editorForm.action, {
-            method: editorForm.method,
-            body: new FormData(editorForm),
-        });
-
-        if (!response.ok) {
-            saveBtn.style = "color:red";
-
-            let errMsg = await response.text();
-            statusMsg.innerHTML = 'Error: ' + errMsg;
-        } else {
-            saveBtn.disabled = true;
-            saveBtn.style = "";
-        }
-
-    } catch (error) {
-        statusMsg.innerHTML = 'Error: ' + error;
+    function inform(message) {
+        _status.innerHTML = message;
     }
-}
 
-editorForm.addEventListener('submit', function(event) {
-    event.preventDefault();
-    save_editor_content();
-    editor.focus();
-});
+    async function save() {
+        try {
+            let response = await fetch(_form.action, {
+                body: new FormData(_form),
+                method: _form.method
+            });
 
-function save_content_from_vim(vim, cdata) {
-    vim.log('save editor content to '+editorForm.action);
-    save_editor_content();
-}
+            if (!response.ok) {
+                let err = await response.text();
+
+                _submit.style = "color:red";
+                inform("Error: " + err);
+            } else {
+                _submit.disabled = true;
+                _submit.style = "";
+            }
+        } catch(error) {
+            inform("Error: " + error);
+        }
+    }
+
+    _submit.disabled = true;
+    _content.addEventListener("input", function() {
+        _submit.disabled = false;
+    });
+
+    _form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        save();
+        _content.focus();
+    });
+
+    return {
+        content: _content,
+        inform: inform,
+        save: save
+    };
+}());
+
 
 window.onload = function() {
     const vim = new VIM();
-
-    vim.on_set_mode = function(vi){
-        statusMsg.innerHTML = (this.m_mode !== COMMAND) ? '-- ' + vi.m_mode + ' --' : '';
-    }
-
-    vim.m_ctrees[COMMAND].set_choice(':', node()
-        .set_choice('w', node()
-            .set_choice('<Enter>', node({action: save_content_from_vim}))
+    vim.on_set_mode = function(vi) {
+        editor.inform(
+            vi.m_mode !== COMMAND ? "-- " + vi.m_mode + " --" : ""
+        );
+    };
+    vim.m_ctrees[COMMAND].set_choice(":", node()
+        .set_choice("w", node()
+            .set_choice("<Enter>", node({action: function(vim, cdata) {
+                editor.save();
+            }}))
         )
     );
-
-    vim.attach_to(editor);
-    saveBtn.disabled = true;
-}
+    vim.attach_to(editor.content);
+};
