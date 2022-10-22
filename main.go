@@ -28,6 +28,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [option...] NOTES_DIR\n", myname)
 		fmt.Fprintln(os.Stderr, "Options:")
 		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "Version:", myversion)
 	}
 
 	flag.Parse()
@@ -38,7 +39,6 @@ func main() {
 
 	notesdir := flag.Arg(0)
 
-	log.Printf("Running %s version %s", myname, myversion)
 	log.Println("Serving notes from: ", notesdir)
 
 	authnHandler := noopHandler
