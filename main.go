@@ -22,7 +22,7 @@ var (
 
 func main() {
 	addr := flag.String("address", "localhost:8888", "TCP network address to listen to")
-	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd-like file containing access credentials expected to use bcrypt-based password hash. (default no authentication)")
+	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd file detailing access credentials with bcrypt-hashed password. (default no authentication)")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [option...] NOTES_DIR\n", myname)
