@@ -1,4 +1,7 @@
 # Changelog
+## [0.3.0] - Unreleased
+- switch from a standalone web-app to a simple CGI app.
+
 ## [0.2.0] - 2022-10-15
 - change the way to specify folder that contain notes from command-line.
 - modify API for an (hopefully) cleaner edit/save access.

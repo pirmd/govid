@@ -1,62 +1,17 @@
 package main
 
 import (
-	"embed"
-	"flag"
-	"fmt"
 	"log"
 	"net/http"
+	"net/http/cgi" //#nosec G504 -- Use Go versions > 1.17
 	"os"
-	"path/filepath"
-	"time"
-)
-
-var (
-	myname    = filepath.Base(os.Args[0])
-	myversion = "v?.?.?-?" //should be set using: go build -ldflags "-X main.myversion=X.X.X"
-
-	//go:embed static/js/*.js
-	//go:embed static/css/*.css
-	staticFS embed.FS
 )
 
 func main() {
-	addr := flag.String("address", "localhost:8888", "TCP network address to listen to")
-	htpasswdfile := flag.String("htpasswd", "", "path to htpasswd file detailing access credentials with bcrypt-hashed password. (default no authentication)")
+	notesdir := os.Getenv("DOCUMENT_ROOT")
+	app := NewWebApp(notesdir)
 
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [option...] NOTES_DIR\n", myname)
-		fmt.Fprintln(os.Stderr, "Options:")
-		flag.PrintDefaults()
-		fmt.Fprintln(os.Stderr, "Version:", myversion)
-	}
-
-	flag.Parse()
-
-	if flag.NArg() != 1 {
-		log.Fatalf("invalid number of argument(s)\nRun %s -help", myname)
-	}
-
-	notesdir := flag.Arg(0)
-
-	log.Println("Serving notes from: ", notesdir)
-
-	authnHandler := noopHandler
-	if *htpasswdfile != "" {
-		htpasswd, err := NewHtpasswdFromFile(*htpasswdfile)
-		if err != nil {
-			log.Fatalf("Fail to parse htpasswd credentials: %v", err)
-		}
-
-		log.Printf("Authenticate using credentials from %s [%d user(s)]", *htpasswdfile, len(htpasswd))
-		authnHandler = htpasswd.BasicAuthHandler
-	}
-
-	mux := http.NewServeMux()
-	mux.Handle("/static/", http.FileServer(http.FS(staticFS)))
-	mux.Handle("/", loggingHandler(authnHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app := NewWebApp(notesdir)
-
+	notesHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			app.EditHandlerFunc(w, r)
@@ -66,22 +21,11 @@ func main() {
 
 		default:
 			w.Header().Set("Allow", "GET, POST")
-			http.Error(w, "method "+r.Method+"is not allowed", http.StatusMethodNotAllowed)
+			http.Error(w, "method "+r.Method+" is not allowed", http.StatusMethodNotAllowed)
 		}
-	}))))
+	})
 
-	srv := &http.Server{
-		Handler:           mux,
-		Addr:              *addr,
-		ReadTimeout:       5 * time.Second,
-		WriteTimeout:      10 * time.Second,
-		IdleTimeout:       120 * time.Second,
-		ReadHeaderTimeout: 5 * time.Second,
-		MaxHeaderBytes:    1 << 20,
-	}
-
-	log.Println("Starting server on: ", *addr)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := cgi.Serve(notesHandler); err != nil {
 		log.Fatal(err)
 	}
 }
