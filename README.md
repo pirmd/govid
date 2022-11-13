@@ -9,8 +9,8 @@ in environment I'm not in control of (i.e. no ssh to my cloud server, or no vi)
 using a simple browser.
 
 Compared to already existing full-features note-taking app, `govid` is really
-basic, build for a personal note taking perspective with no bells and whistles.
-It tries to offer an as quick and simple way to quickly take notes (open
+basic, build for a personal note taking perspective with no bells nor whistles.
+It tries to offer an "as quick and simple way" to quickly take notes (open
 whatever browser you find, connect to your server pointing to the file you'll
 like to edit, authenticate, edit it).
 
@@ -19,11 +19,22 @@ the heavy work to whatever battle-tested http stack you want to use to deploy
 it. 
 
 ## INSTALLATION AND DEPLOYMENT
-With golang binary installed on your system, you just need to run:
+To install `govid` CGI application, you can use:
 ̀``shell
-go build github.com/pirmd/govid
+make install
 ```
-and install `govid` binary and static folder content to your http stack.
+
+By default it will install:
+- `govid` CGI application to ${CGIDIR} as well as its dependant libraries so
+  that it can be run chrooted in ${WWWDIR}.
+- CSS and JS assets in ${HTDOCS}
+
+where $WWWDIR default to /var/www, $CGIDIR to $WWWDIR/cgi-bin and $HTDOCS to
+$WWWDIR/htdocs. Each of these parameters can be altered when invoquing `make
+install`, for example:
+```shell
+make install WWWDIR=my/prefered/www/location
+```
 
 ## API
 Supported request are:
