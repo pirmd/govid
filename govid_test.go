@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -73,7 +73,7 @@ func TestEditHandler(t *testing.T) {
 		}
 
 		if got.StatusCode == http.StatusOK {
-			body, err := ioutil.ReadAll(got.Body)
+			body, err := io.ReadAll(got.Body)
 			if err != nil {
 				t.Fatalf("Fail to read response content for %s: %v", tc.inFilename, err)
 			}
