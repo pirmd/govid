@@ -45,8 +45,8 @@ directory `govid` instance is serving.
 directory `govid` instance is serving.
 
 `govid` only accepts {filename} that lives inside govid's notes directory, it
-will silently 'clean' any path directives (like ../ or absolute path) that will
-try to save or access document outside of this folder.
+will reject any path directives (like ../ or absolute path) that will try to
+save or access document outside of this folder.
 
 If {filename} points to a non-existing note, it will be created once saving,
 including any sub-folders. Notes and sub-folders are created using the umask of

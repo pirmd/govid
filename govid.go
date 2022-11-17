@@ -5,13 +5,12 @@ import (
 	"embed"
 	"errors"
 	"html/template"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"path"
-	"runtime"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -30,7 +29,7 @@ var (
 
 // Note represents a file that govid knows how to interact with.
 type Note struct {
-	Filename string
+	Filepath string
 	Content  []byte
 }
 
@@ -58,23 +57,24 @@ func NewWebApp(notesdir string) *WebApp {
 }
 
 // EditHandlerFunc is the http.HandlerFunc responsible of note editing.
-func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	filename, err := app.sanitizeFilename(r.URL.Path)
-	if err != nil {
-		log.Printf("editing '%s' failed: %v", filename, err)
+func (app WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	filepath := r.URL.Path
+
+	if !app.isValidPathname(filepath) {
+		log.Printf("editing '%s' failed: invalid path name", filepath)
 		http.Error(w, "edit not possible", http.StatusBadRequest)
 		return
 	}
 
-	note, err := app.openNote(filename)
+	note, err := app.openNote(filepath)
 	if err != nil {
-		log.Printf("editing '%s' failed: %v", filename, err)
+		log.Printf("editing '%s' failed: %v", filepath, err)
 		http.Error(w, "edit not possible", http.StatusBadRequest)
 		return
 	}
 
 	if !app.isValidContentType([]byte(note.Content)) {
-		log.Printf("editing '%s' failed: not allowed mime-type", filename)
+		log.Printf("editing '%s' failed: not allowed mime-type", filepath)
 		http.Error(w, "edit not supported", http.StatusBadRequest)
 		return
 	}
@@ -89,58 +89,71 @@ func (app *WebApp) EditHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	buf := new(bytes.Buffer)
 	if err := app.Templates.ExecuteTemplate(buf, editTemplateName, note); err != nil {
-		log.Printf("rendering edit template for '%s' failed: %v", filename, err)
+		log.Printf("rendering edit template for '%s' failed: %v", filepath, err)
 		http.Error(w, "rendering note content failed", http.StatusInternalServerError)
 	}
 
 	if _, err = buf.WriteTo(w); err != nil {
-		log.Printf("rendering edit template for '%s' failed: %v", filename, err)
+		log.Printf("rendering edit template for '%s' failed: %v", filepath, err)
 		http.Error(w, "rendering note content failed", http.StatusInternalServerError)
 	}
 }
 
 // SaveHandlerFunc is the http.HandlerFunc responsible for saving data to notes.
-func (app *WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
+func (app WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxNoteSize)
 
-	content := []byte(r.FormValue("content"))
-
-	filename, err := app.sanitizeFilename(r.URL.Path)
-	if err != nil {
-		log.Printf("saving '%s' failed: %v", filename, err)
+	filepath := r.URL.Path
+	if !app.isValidPathname(filepath) {
+		log.Printf("saving to '%s' failed: invalid  path name", filepath)
 		http.Error(w, "save not possible", http.StatusBadRequest)
 		return
 	}
 
+	content := []byte(r.FormValue("content"))
 	if !app.isValidContentType(content) {
-		log.Printf("saving '%s' failed: not allowed mime-type", filename)
+		log.Printf("saving to '%s' failed: not allowed mime-type", filepath)
 		http.Error(w, "save not supported", http.StatusBadRequest)
 		return
 	}
 
-	fullpath := app.fullpath(filename)
+	fullpath := app.fullpath(filepath)
+
+	fi, err := os.Stat(fullpath)
+	if err != nil && !os.IsNotExist(err) {
+		log.Printf("saving to '%s' failed: %v", filepath, err)
+		http.Error(w, "save not supported", http.StatusInternalServerError)
+		return
+	}
+
+	if fi != nil && fi.IsDir() {
+		log.Printf("saving to '%s' failed: is a directory", filepath)
+		http.Error(w, "save not supported", http.StatusBadRequest)
+		return
+	}
+
 	//#nosec G301 -- O777 is here to let user's umask do its job
 	if err := os.MkdirAll(path.Dir(fullpath), 0777); err != nil {
-		log.Printf("saving '%s' failed: %v", filename, err)
+		log.Printf("saving to '%s' failed: %v", filepath, err)
 		http.Error(w, "save failed", http.StatusInternalServerError)
 		return
 	}
 
 	//#nosec G306 -- O666 is here to let user's umask do its job
 	if err := os.WriteFile(fullpath, content, 0666); err != nil {
-		log.Printf("saving '%s' failed: %v", filename, err)
+		log.Printf("saving to '%s' failed: %v", filepath, err)
 		http.Error(w, "save failed", http.StatusInternalServerError)
 	}
 }
 
-func (app *WebApp) openNote(filename string) (*Note, error) {
-	fullpath := app.fullpath(filename)
+func (app WebApp) openNote(filepath string) (*Note, error) {
+	fullpath := app.fullpath(filepath)
 
 	fi, err := os.Stat(fullpath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &Note{
-				Filename: filename,
+				Filepath: filepath,
 			}, nil
 		}
 
@@ -161,39 +174,30 @@ func (app *WebApp) openNote(filename string) (*Note, error) {
 	}
 
 	return &Note{
-		Filename: filename,
+		Filepath: filepath,
 		Content:  content,
 	}, nil
 }
 
-func (app *WebApp) isValidContentType(content []byte) bool {
+func (app WebApp) isValidPathname(filepath string) bool {
+	if path.Clean("/"+filepath) != filepath {
+		return false
+	}
+
+	for _, c := range filepath {
+		if !unicode.IsPrint(c) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (app WebApp) isValidContentType(content []byte) bool {
 	mimetype := http.DetectContentType(content)
 	return strings.HasPrefix(mimetype, "text/")
 }
 
-func (app *WebApp) sanitizeFilename(filename string) (string, error) {
-	cleaned := path.Clean(path.Join("/", filename))[1:]
-
-	if !fs.ValidPath(cleaned) || runtime.GOOS == "windows" && containsAny(cleaned, `\:`) {
-		return "", os.ErrInvalid
-	}
-
-	return cleaned, nil
-}
-
-func (app *WebApp) fullpath(filename string) string {
-	// TODO: check if it is overkill as sanitizeFilename shall already have
-	// ensure that filename is reasonable
-	return path.Join(app.NotesDir, path.Clean("/"+filename))
-}
-
-func containsAny(s, chars string) bool {
-	for i := 0; i < len(s); i++ {
-		for j := 0; j < len(chars); j++ {
-			if s[i] == chars[j] {
-				return true
-			}
-		}
-	}
-	return false
+func (app WebApp) fullpath(filepath string) string {
+	return path.Join(app.NotesDir, path.Clean("/"+filepath))
 }

@@ -12,6 +12,31 @@ import (
 	"testing"
 )
 
+func TestIsValidPathname(t *testing.T) {
+	testCases := []struct {
+		in   string
+		want bool
+	}{
+		{"/test1", true},
+		{"test1", false},
+		{"./test1", false},
+		{"/../test1", false},
+		{"/../test1", false},
+		{"/../test/test1", false},
+		{"/test/../test1", false},
+		{"/test/../../test1", false},
+		{"", false},
+	}
+
+	testApp := NewWebApp("root")
+	for _, tc := range testCases {
+		got := testApp.isValidPathname(tc.in)
+		if got != tc.want {
+			t.Errorf("isValidPathname failed for '%s'\nGot : %v\nWant: %v\n", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestFullpath(t *testing.T) {
 	testCases := []struct {
 		in   string
@@ -42,22 +67,21 @@ func TestEditHandler(t *testing.T) {
 	testCases := []struct {
 		inFilename string
 		outStatus  int
-		outName    string
 	}{
-		{"world_domination", http.StatusOK, "world_domination"},
-		{"secret", http.StatusOK, "secret"},
-		{"subdir/todo", http.StatusOK, "subdir/todo"},
-		{"newnote", http.StatusOK, "newnote"},
-		{"subdir/newnote", http.StatusOK, "subdir/newnote"},
-		{"newsubdir/newnote", http.StatusOK, "newsubdir/newnote"},
-		{"../htpasswd", http.StatusOK, "htpasswd"},
-		{"subdir", http.StatusBadRequest, ""},
-		{"", http.StatusBadRequest, ""},
-		{"1.gif", http.StatusBadRequest, "1.gif"},
+		{"world_domination", http.StatusOK},
+		{"secret", http.StatusOK},
+		{"subdir/todo", http.StatusOK},
+		{"newnote", http.StatusOK},
+		{"subdir/newnote", http.StatusOK},
+		{"newsubdir/newnote", http.StatusOK},
+		{"../htpasswd", http.StatusBadRequest},
+		{"subdir", http.StatusBadRequest},
+		{"", http.StatusBadRequest},
+		{"1.gif", http.StatusBadRequest},
 	}
 
 	for _, tc := range testCases {
-		r := httptest.NewRequest(http.MethodGet, path.Join("/", tc.inFilename), nil)
+		r := httptest.NewRequest(http.MethodGet, "/"+tc.inFilename, nil)
 		w := httptest.NewRecorder()
 		testApp.EditHandlerFunc(w, r)
 
@@ -79,7 +103,11 @@ func TestEditHandler(t *testing.T) {
 			}
 
 			want := new(bytes.Buffer)
-			if err := testApp.Templates.ExecuteTemplate(want, editTemplateName, &Note{tc.outName, []byte(testNotes[tc.outName])}); err != nil {
+			n := &Note{
+				"/" + tc.inFilename,
+				[]byte(testNotes[tc.inFilename]),
+			}
+			if err := testApp.Templates.ExecuteTemplate(want, editTemplateName, n); err != nil {
 				t.Fatalf("rendering edit template for '%s' failed: %v", tc.inFilename, err)
 			}
 
@@ -97,22 +125,21 @@ func TestSaveHandler(t *testing.T) {
 		inFilename string
 		inContent  string
 		outStatus  int
-		outName    string
 	}{
-		{"world_domination", "TestMeIfYouCan", http.StatusOK, "world_domination"},
-		{"1.gif", "TestMeIfYouCan", http.StatusOK, "1.gif"},
-		{"subdir/todo", "TestMeIfYouCan", http.StatusOK, "subdir/todo"},
-		{"newnote", "TestMeIfYouCan", http.StatusOK, "newnote"},
-		{"subdir/newnote", "TestMeIfYouCan", http.StatusOK, "subdir/newnote"},
-		{"newsubdir/newnote", "TestMeIfYouCan", http.StatusOK, "newsubdir/newnote"},
-		{"../htpasswd", "TestMeIfYouCan", http.StatusOK, "htpasswd"},
-		{"subdir", "TestMeIfYouCan", http.StatusInternalServerError, ""},
-		{"", "TestMeIfYouCan", http.StatusBadRequest, ""},
-		{"secret", "GIF89a^A^@^A^@^@ÿ^@,^@^@^@^@^A^@^A^@^@^B^@;", http.StatusBadRequest, "secret"},
+		{"world_domination", "TestMeIfYouCan", http.StatusOK},
+		{"1.gif", "TestMeIfYouCan", http.StatusOK},
+		{"subdir/todo", "TestMeIfYouCan", http.StatusOK},
+		{"newnote", "TestMeIfYouCan", http.StatusOK},
+		{"subdir/newnote", "TestMeIfYouCan", http.StatusOK},
+		{"newsubdir/newnote", "TestMeIfYouCan", http.StatusOK},
+		{"../htpasswd", "TestMeIfYouCan", http.StatusBadRequest},
+		{"subdir", "TestMeIfYouCan", http.StatusBadRequest},
+		{"", "TestMeIfYouCan", http.StatusBadRequest},
+		{"secret", "GIF89a^A^@^A^@^@ÿ^@,^@^@^@^@^A^@^A^@^@^B^@;", http.StatusBadRequest},
 	}
 
 	for _, tc := range testCases {
-		r := httptest.NewRequest(http.MethodPost, path.Join("/", tc.inFilename), strings.NewReader("content="+url.QueryEscape(tc.inContent)))
+		r := httptest.NewRequest(http.MethodPost, "/"+tc.inFilename, strings.NewReader("content="+url.QueryEscape(tc.inContent)))
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		w := httptest.NewRecorder()
@@ -130,18 +157,18 @@ func TestSaveHandler(t *testing.T) {
 		}
 
 		if got.StatusCode == http.StatusOK {
-			content, err := os.ReadFile(testApp.fullpath(tc.outName))
+			content, err := os.ReadFile(testApp.fullpath(tc.inFilename))
 			if err != nil {
-				t.Fatalf("Fail to read content for %s: %v", tc.outName, err)
+				t.Fatalf("Fail to read content for %s: %v", tc.inFilename, err)
 			}
 
 			if string(content) != tc.inContent {
-				t.Errorf("Save note %s failed.\nGot : %v\nWant: %v", tc.outName, string(content), tc.inContent)
+				t.Errorf("Save note %s failed.\nGot : %v\nWant: %v", tc.inFilename, string(content), tc.inContent)
 			}
 		}
 
 		// Check that original note is not modified
-		if (tc.outStatus != http.StatusOK) || (tc.inFilename != tc.outName) {
+		if tc.outStatus != http.StatusOK {
 			fi, err := os.Stat(path.Join(testApp.NotesDir, tc.inFilename))
 			if err != nil {
 				t.Fatalf("Fail to read content for %s: %#v", tc.inFilename, err)
