@@ -13,6 +13,9 @@ func main() {
 
 	notesHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
+		case http.MethodOptions:
+			w.Header().Set("Allow", "OPTIONS, GET, POST")
+
 		case http.MethodGet:
 			app.EditHandlerFunc(w, r)
 
@@ -20,7 +23,7 @@ func main() {
 			app.SaveHandlerFunc(w, r)
 
 		default:
-			w.Header().Set("Allow", "GET, POST")
+			w.Header().Set("Allow", "OPTIONS, GET, POST")
 			http.Error(w, "method "+r.Method+" is not allowed", http.StatusMethodNotAllowed)
 		}
 	})
