@@ -1,6 +1,9 @@
 # Changelog
 ## [0.3.0] - Unreleased
 - switch from a standalone web-app to a simple CGI app.
+- introduce home-brewed vi.js replacing jsvim.js by [Jakub
+  Mikians](https://github.com/jakub-m) for fun, closer 'vi' look and feel, new
+  minor features and probably more new bugs to hunt.
 
 ## [0.2.0] - 2022-10-15
 - change the way to specify folder that contain notes from command-line.

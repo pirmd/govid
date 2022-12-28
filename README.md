@@ -59,13 +59,6 @@ that does not look-like plaintext will be rejected.
 Requests for accessing too big files or trying to save too big content will be
 rejected.
 
-## CREDITS
-`govid` is using
-[vim-in-textarea](https://github.com/jakub-m/vim-in-textarea) from
-[Jakub Mikians](https://github.com/jakub-m) that offers a simple
-and efficient way to interact with a textarea in a vim-like
-fashion. Thanks to him!
-
 ## CONTRIBUTION
 If you feel like to contribute, just follow github guidelines on
 [forking](https://help.github.com/articles/fork-a-repo/) then [send a pull
