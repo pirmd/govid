@@ -26,14 +26,14 @@ make install
 
 By default it will install:
 - `govid` CGI application to ${CGIDIR} as well as its dependant libraries so
-  that it can be run chrooted in ${WWWDIR}.
+  that it can be run chrooted in ${PREFIX}.
 - CSS and JS assets in ${HTDOCS}
 
-where $WWWDIR default to /var/www, $CGIDIR to $WWWDIR/cgi-bin and $HTDOCS to
-$WWWDIR/htdocs. Each of these parameters can be altered when invoquing `make
+where $PREFIX default to /var/www, $CGIDIR to $PREFIX/cgi-bin and $HTDOCS to
+$PREFIX/htdocs. Each of these parameters can be altered when invoquing `make
 install`, for example:
 ```shell
-make install WWWDIR=my/prefered/www/location
+make install PREFIX=my/prefered/www/location
 ```
 
 ## API
