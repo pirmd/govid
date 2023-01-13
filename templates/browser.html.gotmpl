@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="data:impage/png;base64,">
+        <link rel="stylesheet" href="/govid.css" type="text/css"> 
+        <title>{{.Filename}}</title>
+    </head>
+    <body>
+        {{- range .Entries -}}
+        <pre><a href="{{$.Filename}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a></pre>
+        {{- end -}}
+    </body>
+</html>

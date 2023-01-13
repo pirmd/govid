@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,20 +13,68 @@ import (
 	"testing"
 )
 
+func TestSplitPath(t *testing.T) {
+	testCases := []struct {
+		in   string
+		want []string
+	}{
+		{"", []string{}},
+		{"test", []string{"test"}},
+		{"test/test1/test11", []string{"test", "test1", "test11"}},
+		{"test/../test11", []string{"test", "..", "test11"}},
+		{"../test/../test11", []string{"..", "test", "..", "test11"}},
+		{"./test/../test11.test", []string{".", "test", "..", "test11.test"}},
+	}
+
+	for _, tc := range testCases {
+		got := splitPath(tc.in)
+		if len(got) != len(tc.want) {
+			t.Fatalf("splitPath failed for '%s'\nGot : %v\nWant: %v\n", tc.in, got, tc.want)
+		}
+		for i := range got {
+			if got[i] != tc.want[i] {
+				t.Fatalf("splitPath failed for '%s'\nGot : %v\nWant: %v\n", tc.in, got, tc.want)
+			}
+		}
+	}
+}
+
+func TestContainsDotDot(t *testing.T) {
+	testCases := []struct {
+		in   string
+		want bool
+	}{
+		{"", false},
+		{"test", false},
+		{"test/test1/test11", false},
+		{"test/../test11", true},
+		{"../test/../test11", true},
+		{"./test/../test11.test", true},
+		{"./test/test11..test", false},
+	}
+
+	for _, tc := range testCases {
+		got := containsDotDot(tc.in)
+		if got != tc.want {
+			t.Errorf("containsDotDot failed for '%s'\nGot : %v\nWant: %v\n", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestIsValidPathname(t *testing.T) {
 	testCases := []struct {
 		in   string
 		want bool
 	}{
+		{"", true},
 		{"/test1", true},
-		{"test1", false},
-		{"./test1", false},
+		{"test1", true},
+		{"./test1", true},
 		{"/../test1", false},
 		{"/../test1", false},
 		{"/../test/test1", false},
 		{"/test/../test1", false},
 		{"/test/../../test1", false},
-		{"", false},
 	}
 
 	testApp := NewWebApp("root")
@@ -61,8 +110,8 @@ func TestFullpath(t *testing.T) {
 	}
 }
 
-func TestEditHandler(t *testing.T) {
-	testApp, testNotes := setup(t)
+func TestEditorHandler(t *testing.T) {
+	testApp, _ := setup(t)
 
 	testCases := []struct {
 		inFilename string
@@ -75,15 +124,16 @@ func TestEditHandler(t *testing.T) {
 		{"subdir/newnote", http.StatusOK},
 		{"newsubdir/newnote", http.StatusOK},
 		{"../htpasswd", http.StatusBadRequest},
-		{"subdir", http.StatusBadRequest},
-		{"", http.StatusBadRequest},
+		{"../notexist", http.StatusBadRequest},
+		{"subdir", http.StatusOK},
+		{"", http.StatusOK},
 		{"1.gif", http.StatusBadRequest},
 	}
 
 	for _, tc := range testCases {
 		r := httptest.NewRequest(http.MethodGet, "/"+tc.inFilename, nil)
 		w := httptest.NewRecorder()
-		testApp.EditHandlerFunc(w, r)
+		testApp.GetHandlerFunc(w, r)
 
 		got := w.Result()
 		defer func() {
@@ -102,17 +152,13 @@ func TestEditHandler(t *testing.T) {
 				t.Fatalf("Fail to read response content for %s: %v", tc.inFilename, err)
 			}
 
-			want := new(bytes.Buffer)
-			n := &Note{
-				"/" + tc.inFilename,
-				[]byte(testNotes[tc.inFilename]),
-			}
-			if err := testApp.Templates.ExecuteTemplate(want, editTemplateName, n); err != nil {
-				t.Fatalf("rendering edit template for '%s' failed: %v", tc.inFilename, err)
+			want, err := buildTmpl(testApp, tc.inFilename)
+			if err != nil {
+				t.Fatalf("%v", err)
 			}
 
-			if string(body) != want.String() {
-				t.Errorf("Response body for %s failed.\nGot : %v\nWant: %v", tc.inFilename, string(body), want.String())
+			if string(body) != want {
+				t.Errorf("Response body for %s failed.\nGot : %v\nWant: %v", tc.inFilename, string(body), want)
 			}
 		}
 	}
@@ -216,4 +262,46 @@ func setup(t *testing.T) (*WebApp, map[string]string) {
 	}
 
 	return NewWebApp(notesdir), testCases
+}
+
+func buildTmpl(testApp *WebApp, filename string) (string, error) {
+	path := path.Join(testApp.NotesDir, filename)
+
+	want := new(bytes.Buffer)
+	file := &File{Filename: "/" + filename}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			if err := testApp.Templates.ExecuteTemplate(want, editorTemplate, file); err != nil {
+				return "", fmt.Errorf("rendering edit template for '%s' failed: %v", filename, err)
+			}
+			return want.String(), nil
+		}
+		return "", err
+	}
+
+	if fi.IsDir() {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return "", err
+		}
+
+		file.Entries = entries
+		if err := testApp.Templates.ExecuteTemplate(want, browserTemplate, file); err != nil {
+			return "", fmt.Errorf("rendering edit template for '%s' failed: %v", filename, err)
+		}
+		return want.String(), nil
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	file.Content = string(content)
+	if err := testApp.Templates.ExecuteTemplate(want, editorTemplate, file); err != nil {
+		return "", fmt.Errorf("rendering edit template for '%s' failed: %v", filename, err)
+	}
+
+	return want.String(), nil
 }

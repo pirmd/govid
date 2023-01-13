@@ -12,7 +12,7 @@ Compared to already existing full-features note-taking app, `govid` is really
 basic, build for a personal note taking perspective with no bells nor whistles.
 It tries to offer an "as quick and simple way" to quickly take notes (open
 whatever browser you find, connect to your server pointing to the file you'll
-like to edit, authenticate, edit it).
+like to edit, edit it).
 
 `govid` design is intentionally kept as minimal as possible, leaving most of
 the heavy work to whatever battle-tested http stack you want to use to deploy
@@ -38,18 +38,18 @@ make install PREFIX=my/prefered/www/location
 
 ## API
 Supported request are:
-+ `GET /{filename}`:: view/edit note located at {filename} path within the notes
-directory `govid` instance is serving.
++ `GET /{filename}`:: view/edit file or folder located at {filename} path
+  within the directory `govid` instance is serving.
 
-+ `POST /{filename}`:: save note located at {filename} path within the notes
-directory `govid` instance is serving.
++ `POST /{filename}`:: save file or folder located at {filename} path within
+  the directory `govid` instance is serving.
 
-`govid` only accepts {filename} that lives inside govid's notes directory, it
-will reject any path directives (like ../ or absolute path) that will try to
-save or access document outside of this folder.
+`govid` only accepts {filename} that lives inside govid's directory, it will
+reject any path directives (like ../ or absolute path) that will try to save or
+access files outside of this folder.
 
-If {filename} points to a non-existing note, it will be created once saving,
-including any sub-folders. Notes and sub-folders are created using the umask of
+If {filename} points to a non-existing file, it will be created once saving,
+including any sub-folders. Files and sub-folders are created using the umask of
 the user under which `govid` is running.
 
 Requests for {filename} pointing to files that are believed not to be in

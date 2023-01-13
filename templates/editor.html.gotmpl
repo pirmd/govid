@@ -5,11 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="data:impage/png;base64,">
         <link rel="stylesheet" href="/govid.css" type="text/css"> 
-        <title>{{.Filepath}}</title>
+        <title>{{.Filename}}</title>
     </head>
     <body>
-        <form method="POST" action="{{.Filepath}}">
-            <textarea name="content" autofocus>{{.Text}}</textarea>
+        <form method="POST" action="{{.Filename}}">
+            <textarea name="content" autofocus>{{.Content}}</textarea>
             <div><input value="Save" type="submit">&emsp;<input id="status"></input></div>
         </form>
     </body>

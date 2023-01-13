@@ -17,7 +17,7 @@ func main() {
 			w.Header().Set("Allow", "OPTIONS, GET, POST")
 
 		case http.MethodGet:
-			app.EditHandlerFunc(w, r)
+			app.GetHandlerFunc(w, r)
 
 		case http.MethodPost:
 			app.SaveHandlerFunc(w, r)
