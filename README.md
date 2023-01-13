@@ -18,6 +18,11 @@ like to edit, edit it).
 the heavy work to whatever battle-tested http stack you want to use to deploy
 it. 
 
+`govid` is developed and used on OpenBSD, it is most probably going to operate
+smoothly on any unix-like environment. Running `govid` on other plat-forms
+like Windows might work through some features might not be properly supported
+(like path validation logic).
+
 ## INSTALLATION AND DEPLOYMENT
 To install `govid` CGI application, you can use:
 ̀``shell
@@ -47,6 +52,10 @@ Supported request are:
 `govid` only accepts {filename} that lives inside govid's directory, it will
 reject any path directives (like ../ or absolute path) that will try to save or
 access files outside of this folder.
+Addionally, {filename} pointing to hidden files (starting with '.') or files
+living in an hidden folder are not accepted. Note that the logic implemented is
+based on unix-like hidden files and is most certainly not going to operate well
+on Windows.
 
 If {filename} points to a non-existing file, it will be created once saving,
 including any sub-folders. Files and sub-folders are created using the umask of

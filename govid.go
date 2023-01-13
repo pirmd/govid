@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"unicode"
 )
 
 const (
@@ -189,10 +188,8 @@ func (app WebApp) isValidPathname(filepath string) bool {
 		return false
 	}
 
-	for _, c := range filepath {
-		if !unicode.IsPrint(c) {
-			return false
-		}
+	if containsHiddenFile(filepath) {
+		return false
 	}
 
 	return true
@@ -230,6 +227,22 @@ func containsDotDot(path string) bool {
 	}
 	for _, p := range splitPath(path) {
 		if p == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+func containsHiddenFile(path string) bool {
+	if !strings.Contains(path, ".") {
+		return false
+	}
+	for _, p := range splitPath(path) {
+		if p == "." || p == ".." {
+			continue
+		}
+
+		if strings.HasPrefix(p, ".") {
 			return true
 		}
 	}

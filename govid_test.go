@@ -61,6 +61,29 @@ func TestContainsDotDot(t *testing.T) {
 	}
 }
 
+func TestContainsHiddenFile(t *testing.T) {
+	testCases := []struct {
+		in   string
+		want bool
+	}{
+		{"", false},
+		{"test", false},
+		{"test/test1/test11", false},
+		{"test/test1/test11.test", false},
+		{"test/.test11", true},
+		{"./test/test11", false},
+		{"./.test/test11", true},
+		{"./test/test11..test", false},
+	}
+
+	for _, tc := range testCases {
+		got := containsHiddenFile(tc.in)
+		if got != tc.want {
+			t.Errorf("containsHiddenFile failed for '%s'\nGot : %v\nWant: %v\n", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestIsValidPathname(t *testing.T) {
 	testCases := []struct {
 		in   string
@@ -72,9 +95,13 @@ func TestIsValidPathname(t *testing.T) {
 		{"./test1", true},
 		{"/../test1", false},
 		{"/../test1", false},
-		{"/../test/test1", false},
+		{"../test/test1", false},
 		{"/test/../test1", false},
-		{"/test/../../test1", false},
+		{"test/../../test1", false},
+		{".test/test1", false},
+		{"./test/test1.txt", true},
+		{"test/./test1.txt", true},
+		{"test/.test1.txt", false},
 	}
 
 	testApp := NewWebApp("root")
