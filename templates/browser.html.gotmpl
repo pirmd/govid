@@ -8,6 +8,7 @@
         <title>{{.Filename}}</title>
     </head>
     <body>
+        <nav>{{range .PathComponents}}/<a href="/{{.Filename}}">{{.Name}}</a>{{end}}</nav>
         {{- range .Entries -}}
         <pre><a href="{{$.Filename}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a></pre>
         {{- end -}}

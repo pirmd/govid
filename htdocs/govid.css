@@ -3,19 +3,32 @@ html, body {
     margin: 0
 }
 
+body {
+    display: flex;
+    flex-direction: column
+}
+
+nav {
+    font: 2em/1.62 monospace;
+}
+
 form {
     font: 1.2em/1.62 monospace;
     height: 100%;
     display: flex;
-    flex-flow: column
+    flex-direction: column
 }
 
 form > textarea {
-    font: inherit;
-    flex: 1 1 auto;
+    flex: auto;
     resize: none
 }
 
-#status {
-    width: 95%;
+form > div {
+    display: flex;
+    flex-direction: row
+}
+
+form > div > #status {
+    flex: auto
 }

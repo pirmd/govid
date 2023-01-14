@@ -13,6 +13,31 @@ import (
 	"testing"
 )
 
+func TestFilePathComponents(t *testing.T) {
+	testCases := []struct {
+		in   string
+		want []*File
+	}{
+		{"", []*File{}},
+		{"test", []*File{{Filename: "test"}}},
+		{"test/test1", []*File{{Filename: "test"}, {Filename: "test/test1"}}},
+		{"test/test1/test11", []*File{{Filename: "test"}, {Filename: "test/test1"}, {Filename: "test/test1/test11"}}},
+	}
+
+	for _, tc := range testCases {
+		testFile := &File{Filename: tc.in}
+		got := testFile.PathComponents()
+
+		if len(got) != len(tc.want) {
+			t.Fatalf("File.Path failed for '%s'\nGot : %#v\nWant: %#v\n", tc.in, got, tc.want)
+		}
+		for i := range got {
+			if got[i].Filename != tc.want[i].Filename {
+				t.Fatalf("File.Path failed for '%s'\nGot : %#v\nWant: %#v\n", tc.in, got, tc.want)
+			}
+		}
+	}
+}
 func TestSplitPath(t *testing.T) {
 	testCases := []struct {
 		in   string

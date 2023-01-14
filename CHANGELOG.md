@@ -7,6 +7,7 @@
 - add support to browse directories.
 - add verification that requested file is not an hidden file or does not belong
   to an hidden folder.
+- add a navigation bar.
 
 ## [0.2.0] - 2022-10-15
 - change the way to specify folder that contain notes from command-line.

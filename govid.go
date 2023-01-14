@@ -36,6 +36,31 @@ type File struct {
 	Entries  []os.DirEntry
 }
 
+// Name returns File base name.
+func (f File) Name() string {
+	return path.Base(f.Filename)
+}
+
+// PathComponents splits File's Filename into its individual path components.
+func (f File) PathComponents() []*File {
+	c := []*File{}
+	p := splitPath(f.Filename)
+
+	for i := range p {
+		if i == 0 {
+			c = append(c, &File{
+				Filename: p[i],
+			})
+			continue
+		}
+		c = append(c, &File{
+			Filename: path.Join(c[i-1].Filename, p[i]),
+		})
+	}
+
+	return c
+}
+
 // WebApp represents govid application.
 type WebApp struct {
 	NotesDir  string
@@ -215,17 +240,17 @@ func raiseHTTPError(w http.ResponseWriter, err error) {
 	}
 }
 
-func splitPath(path string) []string {
-	return strings.FieldsFunc(path, func(c rune) bool {
+func splitPath(filepath string) []string {
+	return strings.FieldsFunc(filepath, func(c rune) bool {
 		return c == '/'
 	})
 }
 
-func containsDotDot(path string) bool {
-	if !strings.Contains(path, "..") {
+func containsDotDot(filepath string) bool {
+	if !strings.Contains(filepath, "..") {
 		return false
 	}
-	for _, p := range splitPath(path) {
+	for _, p := range splitPath(filepath) {
 		if p == ".." {
 			return true
 		}
@@ -233,11 +258,11 @@ func containsDotDot(path string) bool {
 	return false
 }
 
-func containsHiddenFile(path string) bool {
-	if !strings.Contains(path, ".") {
+func containsHiddenFile(filepath string) bool {
+	if !strings.Contains(filepath, ".") {
 		return false
 	}
-	for _, p := range splitPath(path) {
+	for _, p := range splitPath(filepath) {
 		if p == "." || p == ".." {
 			continue
 		}
