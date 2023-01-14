@@ -5,12 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="data:impage/png;base64,">
         <link rel="stylesheet" href="/govid.css" type="text/css"> 
+        <link rel="stylesheet" href="/browser.css" type="text/css"> 
         <title>{{.Filename}}</title>
     </head>
     <body>
         <nav>{{range .PathComponents}}/<a href="/{{.Filename}}">{{.Name}}</a>{{end}}</nav>
-        {{- range .Entries -}}
-        <pre><a href="{{$.Filename}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a></pre>
-        {{- end -}}
+        <ul>
+            {{range .Entries}}<li><a href="{{$.Filename}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a>{{end}}
+        </ul>
     </body>
 </html>

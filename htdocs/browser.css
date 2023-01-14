@@ -1,0 +1,13 @@
+ul {
+  border: 1px solid snow;
+  height: 100%;
+  flex:auto;
+  list-style-type: none;
+  margin: 0;
+  padding: 0
+}
+
+li:hover, li:focus{
+    background-color: snow;
+    cursor:pointer
+}
