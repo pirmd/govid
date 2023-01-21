@@ -2,7 +2,8 @@ type Mode = "COMMAND" | "INSERT" | "EXECUTE";
 
 class VI {
     shiftwidth = 4;
-    save = () => { throw new Error("Save is not implemented"); };
+    open = (path: string) => { throw new Error("Open is not implemented"); };
+    save = (path: string) => { throw new Error("Save is not implemented"); };
     quit = () => { throw new Error("Quit is not implemented"); };
 
     mode: Mode = "COMMAND";
@@ -81,13 +82,21 @@ class VI {
         this.ex.value = "";
 
         switch (true) {
+            case (cmdline.startsWith(":e ")):
+                try {
+                    this.open(cmdline.slice(3));
+                } catch(err) {
+                    if (err instanceof Error) this.err(err.message);
+                }
+            return;
+
             case (cmdline === ":q"):
                 this.quit();
             return;
 
-            case (cmdline === ":w"):
+            case (cmdline.startsWith(":w")):
                 try {
-                    this.save();
+                    this.save(cmdline.slice(3));
                 } catch(err) {
                     if (err instanceof Error) this.err(err.message);
                 }
@@ -95,7 +104,7 @@ class VI {
 
             case (cmdline === ":wq"):
                 try {
-                    this.save();
+                    this.save("");
                 } catch(err) {
                     if (err instanceof Error) this.err(err.message);
                     return;

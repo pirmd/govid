@@ -26,6 +26,17 @@ var editor = (function() {
         }
     }
 
+    function open(filepath) {
+        window.location.pathname = filepath;
+    }
+
+    function quit() {
+        let lastPath = window.location.pathname.lastIndexOf("/");
+
+        let dirname = (lastPath > 0) ? window.location.pathname.slice(0, lastPath) : "";
+        window.location.pathname = dirname;
+    }
+
     submit.disabled = true;
     content.addEventListener("input", function() {
         submit.disabled = false;
@@ -41,11 +52,15 @@ var editor = (function() {
         content: content,
         status: status,
         save: save,
+        quit: quit,
+        open: open,
     };
 }());
 
 
 window.onload = function() {
     var vi = new VI(editor.content, editor.status);
+    vi.open = editor.open;
     vi.save = editor.save;
+    vi.quit = editor.quit;
 };
