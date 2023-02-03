@@ -1,5 +1,5 @@
 # Changelog
-## [0.3.0] - Unreleased
+## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.
 - introduce home-brewed vi.js replacing jsvim.js by [Jakub
   Mikians](https://github.com/jakub-m) for fun, closer 'vi' look and feel, new
