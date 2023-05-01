@@ -1,4 +1,7 @@
 # Changelog
+## [0.3.1] - unreleased
+- Fix browser's template that improperly build links to resources.
+
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.
 - introduce home-brewed vi.js replacing jsvim.js by [Jakub
