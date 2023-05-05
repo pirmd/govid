@@ -221,16 +221,22 @@ const commands = new KeyNode()
         .add("d", new KeyNode((vi: VI, c: number) => {
             const curL = vi.ed.line();
             if (typeof(curL) === "undefined") return;
-            const endL = (c > 1) ? vi.ed.lineV(c-1) : curL;
-            if (typeof(endL) === "undefined") return;
+            const delL = (c > 1) ? vi.ed.lineV(c-1) : curL;
+            if (typeof(delL) === "undefined") return;
 
-            vi.copy(curL.start, endL.end+1);
-            if ( endL.end === vi.ed.EOF() ) {
-                vi.ed.delete(curL.start - 1, endL.end);
+            if (delL.end === vi.ed.EOF()) {
+                if (delL.start > 0) delL.start = delL.start - 1;
+                vi.copy(delL.start, delL.end);
+                vi.ed.delete(delL.start, delL.end);
+
+                const newCurL = vi.ed.line(delL.start)
+                if (typeof(newCurL) === "undefined") return;
+                vi.ed.moveTo(newCurL.start);
             } else {
-                vi.ed.delete(curL.start, endL.end+1);
+                vi.copy(delL.start, delL.end + 1);
+                vi.ed.delete(delL.start, delL.end + 1);
+                vi.ed.moveTo(delL.start);
             }
-            vi.ed.moveTo(curL.start);
         }))
         .add("w", new KeyNode((vi: VI, c: number) => {
             const start = vi.ed.cursor();

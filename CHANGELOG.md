@@ -2,6 +2,7 @@
 ## [0.3.1] - unreleased
 - Fix browser's template that improperly build links to resources.
 - Fix vi.js "J" command improper behavior.
+- Fix misbehavior of vi.js 'dd' command.
 
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.
