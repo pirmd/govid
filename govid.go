@@ -111,7 +111,14 @@ func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		dir := File{Filename: filepath, Entries: entries}
+		validEntries := []os.DirEntry{}
+		for _, entry := range entries {
+			if app.isValidPathname(entry.Name()) {
+				validEntries = append(validEntries, entry)
+			}
+		}
+
+		dir := File{Filename: filepath, Entries: validEntries}
 		app.serveTemplate(w, browserTemplate, dir)
 		return
 	}

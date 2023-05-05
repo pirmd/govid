@@ -4,6 +4,7 @@
 - Fix vi.js "J" command improper behavior.
 - Fix misbehavior of vi.js 'dd' command.
 - Fix non working vi.js ':wq' command.
+- Filter out entries with invalid filename when listing folder content.
 
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.
