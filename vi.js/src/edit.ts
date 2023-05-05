@@ -139,6 +139,10 @@ class Editor {
     }
 
     delete(start: number, end?: number) {
+        if (typeof(end) === "undefined") {
+            end = (start < this.EOF()) ? start + 1: start;
+        }
+
         this.insert("", start, end);
     }
 

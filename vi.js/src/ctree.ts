@@ -176,8 +176,12 @@ const commands = new KeyNode()
         if (curL.end === vi.ed.EOF()) return;
 
         vi.ed.delete(curL.end);
-        vi.ed.moveV(1);
-        vi.setMode("INSERT");
+        while (vi.ed.text().charAt(curL.end) === " ") {
+            vi.ed.delete(curL.end)
+        }
+
+        vi.ed.insert(" ", curL.end);
+        vi.ed.moveTo(curL.end)
     }))
     .add("o", new KeyNode((vi: VI, c: number) => {
         const curL = vi.ed.line();
