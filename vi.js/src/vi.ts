@@ -88,18 +88,10 @@ class VI {
                 } catch(err) {
                     if (err instanceof Error) this.err(err.message);
                 }
-            return;
+                return;
 
             case (cmdline === ":q"):
                 this.quit();
-            return;
-
-            case (cmdline.startsWith(":w")):
-                try {
-                    this.save(cmdline.slice(3));
-                } catch(err) {
-                    if (err instanceof Error) this.err(err.message);
-                }
                 return;
 
             case (cmdline === ":wq"):
@@ -111,6 +103,14 @@ class VI {
                 }
 
                 this.quit();
+                return;
+
+            case (cmdline.startsWith(":w")):
+                try {
+                    this.save(cmdline.slice(3));
+                } catch(err) {
+                    if (err instanceof Error) this.err(err.message);
+                }
                 return;
 
             case ((cmdline.startsWith("/")) || (cmdline.startsWith("?"))): {
