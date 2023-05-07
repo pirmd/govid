@@ -165,6 +165,9 @@ func (app WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// replace CR LF \r\n (windows) with LF \n (unix)
+	content = bytes.Replace(content, []byte{13, 10}, []byte{10}, -1)
+
 	fullpath := app.fullpath(filepath)
 
 	fi, err := os.Stat(fullpath)
