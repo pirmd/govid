@@ -3,8 +3,9 @@ PREFIX  ?= /var/www
 CGIDIR  ?= ${PREFIX}/cgi-bin
 HTDOCS  ?= ${PREFIX}/htdocs
 
-GO      = go
-LDFLAGS = -w -s
+GO             = go
+LDFLAGS_STATIC = -linkmode 'external' -extldflags '-static'
+LDFLAGS        = ${LDFLAGS_STATIC} -w -s
 
 BIN       = govid
 SRC_MOD   = go.mod
@@ -39,12 +40,6 @@ install: ${BIN} ${ASSETS}
 	@echo "* Install ${BIN} to ${DESTDIR}${CGIDIR}"
 	${INSTALL} -d -o root -g daemon -m 0755 ${DESTDIR}${CGIDIR}
 	${INSTALL} -o root -g daemon -m 0755 ${BIN} ${DESTDIR}${CGIDIR}
-
-	@echo "* Install ${BIN} dynamic dependencies to ${DESTDIR} [allow chroot]"
-	for d in `ldd ${BIN}|awk '$$5~1 {print $$7}'`; do \
-		${INSTALL} -d -o root -g daemon -m 0755 ${DESTDIR}${PREFIX}$${d%/*} ; \
-		${INSTALL} -o root -g daemon -m 0644 $$d ${DESTDIR}${PREFIX}$$d ; \
-	done
 
 	@echo "* Install static assets to ${DESTDIR}${HTDOCS}"
 	${INSTALL} -d -o root -g daemon -m 0755 ${DESTDIR}${HTDOCS}
