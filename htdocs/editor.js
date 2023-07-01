@@ -27,7 +27,13 @@ var editor = (function() {
     }
 
     function open(filepath) {
-        window.location.pathname = filepath;
+        if (filepath.startsWith('/')) {
+            window.location.pathname = filepath;
+        } else {
+            let lastPath = window.location.pathname.lastIndexOf("/");
+            let dirname = (lastPath > 0) ? window.location.pathname.slice(0, lastPath+1) : "";
+            window.location.pathname = dirname + filepath;
+        }
     }
 
     function quit() {

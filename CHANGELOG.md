@@ -7,6 +7,7 @@
 - Fix misbehavior of vi.js 'Tab' in INSERT mode.
 - Filter out entries with invalid filename when listing folder content.
 - Normalize new lines to unix representation when saving node content.
+- Add to vi.js ':e' command support to open notes relative to current path.
 - Change default assets installation location to /var/www/htdocs/govid instead
   of /var/www/htdocs.
 - Add GOVID_NOTESDIR environment variable to configure the notes folder that
