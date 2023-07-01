@@ -16,9 +16,10 @@ SRC_TMPL != ls templates/*
 VIJS_PRJ = vi.js
 VIJS_SRC != ls ${VIJS_PRJ}/src/*.ts
 VIJS     = ${VIJS_PRJ}/vi.js
+VIJSMIN  = ${VIJS_PRJ}/vi.min.js
 
 ASSETS != ls htdocs/*
-ASSETS += ${VIJS}
+ASSETS += ${VIJSMIN}
 
 .PHONY: all clean dev-dep 
 
@@ -36,6 +37,9 @@ ${VIJS}: ${VIJS_SRC}
 	cd ${VIJS_PRJ} && npm run -s lint -- --quiet
 	cd ${VIJS_PRJ} && npm run -s build
 
+${VIJSMIN}: ${VIJS}
+	cd ${VIJS_PRJ} && npm run -s minify
+
 install: ${BIN} ${ASSETS}
 	@echo "* Install ${BIN} to ${DESTDIR}${CGIDIR}"
 	${INSTALL} -d -o root -g daemon -m 0755 ${DESTDIR}${CGIDIR}
@@ -47,7 +51,7 @@ install: ${BIN} ${ASSETS}
 
 clean:
 	go clean
-	-rm -f ${BIN} ${VIJS}
+	-rm -f ${BIN} ${VIJS} ${VIJSMIN}
 
 dev-dep:
 	@echo "* Install go verification tools"
