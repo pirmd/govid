@@ -57,6 +57,11 @@ class VI {
                     this.ed.indent();
                     return true;
                 }
+                if (k === "Tab") {
+                    this.ed.insert(" ".repeat(this.shiftwidth));
+                    this.ed.moveH(this.shiftwidth);
+                    return "true";
+                }
                 return false;
 
             case (this.mode == "EXECUTE"):

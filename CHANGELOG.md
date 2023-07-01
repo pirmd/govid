@@ -4,6 +4,7 @@
 - Fix vi.js "J" command improper behavior.
 - Fix misbehavior of vi.js 'dd' command.
 - Fix non working vi.js ':wq' command.
+- Fix misbehavior of vi.js 'Tab' in INSERT mode.
 - Filter out entries with invalid filename when listing folder content.
 - Normalize new lines to unix representation when saving node content.
 - Change default assets installation location to /var/www/htdocs/govid instead
