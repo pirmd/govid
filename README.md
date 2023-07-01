@@ -35,8 +35,8 @@ By default it will install:
 - CSS and JS assets in ${HTDOCS}
 
 where $PREFIX default to /var/www, $CGIDIR to $PREFIX/cgi-bin and $HTDOCS to
-$PREFIX/htdocs. Each of these parameters can be altered when invoquing `make
-install`, for example:
+$PREFIX/htdocs/govid. Each of these parameters can be altered when invoquing
+`make install`, for example:
 ```shell
 make install PREFIX=my/prefered/www/location
 ```

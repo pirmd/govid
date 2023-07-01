@@ -6,6 +6,8 @@
 - Fix non working vi.js ':wq' command.
 - Filter out entries with invalid filename when listing folder content.
 - Normalize new lines to unix representation when saving node content.
+- Change default assets installation location to /var/www/htdocs/govid instead
+  of /var/www/htdocs
 
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.

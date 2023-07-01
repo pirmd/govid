@@ -1,7 +1,7 @@
 .POSIX:
 PREFIX  ?= /var/www
 CGIDIR  ?= ${PREFIX}/cgi-bin
-HTDOCS  ?= ${PREFIX}/htdocs
+HTDOCS  ?= ${PREFIX}/htdocs/govid
 
 GO             = go
 LDFLAGS_STATIC = -linkmode 'external' -extldflags '-static'
