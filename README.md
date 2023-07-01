@@ -34,12 +34,16 @@ By default it will install:
   that it can be run chrooted in ${PREFIX}.
 - CSS and JS assets in ${HTDOCS}
 
-where $PREFIX default to /var/www, $CGIDIR to $PREFIX/cgi-bin and $HTDOCS to
-$PREFIX/htdocs/govid. Each of these parameters can be altered when invoquing
+where ${PREFIX} default to /var/www, ${CGIDIR} to ${PREFIX/cgi-bin} and
+${HTDOCS} to ${PREFIX}/htdocs/govid. Each of these parameters can be altered
+when invoquing
 `make install`, for example:
 ```shell
 make install PREFIX=my/prefered/www/location
 ```
+## CONFIGURATION
+`govid` will serve notes from the location contained in GODIR_NOTESDIR
+environement variable or, if not set, from DOCUMENT_ROOT.
 
 ## API
 Supported request are:

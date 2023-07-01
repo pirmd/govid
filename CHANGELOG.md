@@ -7,7 +7,9 @@
 - Filter out entries with invalid filename when listing folder content.
 - Normalize new lines to unix representation when saving node content.
 - Change default assets installation location to /var/www/htdocs/govid instead
-  of /var/www/htdocs
+  of /var/www/htdocs.
+- Add GOVID_NOTESDIR environment variable to configure the notes folder that
+  govid shall serve.
 
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.
