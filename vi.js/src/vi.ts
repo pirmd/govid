@@ -14,7 +14,8 @@ class VI {
     lastSearch = "";
 
     constructor(textarea: HTMLTextAreaElement, exInput: HTMLInputElement) {
-        textarea.onkeydown = this.onkeydown.bind(this);
+        textarea.addEventListener("keydown", this.onkeydown.bind(this));
+        textarea.addEventListener("compositionupdate", this.oncompositionupdate.bind(this));
         this.ed = new Editor(textarea);
 
         exInput.onkeydown = this.onkeydown.bind(this);
@@ -42,6 +43,17 @@ class VI {
         let k = event.key;
         if (event.ctrlKey) k = "Ctrl-" + k;
         if (this.handleKey(k)) event.preventDefault();
+    }
+
+    oncompositionupdate(event: CompositionEvent) {
+        const k = event.data;
+        if (this.handleKey(k)) {
+            // event.prevenDefault() is not acting as I expect, so I simulate
+            // it in an ugly but 'effective' fashion
+            this.ed.textarea.blur();
+            setTimeout(() => this.ed.textarea.focus(), 10);
+            this.ed.delete(this.ed.cursor() - 1);
+        }
     }
 
     handleKey(k: string) {

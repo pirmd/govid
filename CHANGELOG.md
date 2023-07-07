@@ -12,6 +12,8 @@
   of /var/www/htdocs.
 - Add GOVID_NOTESDIR environment variable to configure the notes folder that
   govid shall serve.
+- Add support for deadkey detection to vi.js. Introduce '^' command to move to
+  first word of the current line.
 
 ## [0.3.0] - 2023-02-03
 - switch from a standalone web-app to a simple CGI app.

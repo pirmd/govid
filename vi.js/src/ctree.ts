@@ -89,6 +89,16 @@ const commands = new KeyNode()
         if (typeof(curL) === "undefined") return;
         vi.ed.moveTo(curL.start)
     }))
+    .add("^", new KeyNode((vi: VI, c: number) => {
+        const curL = vi.ed.line();
+        if (typeof(curL) === "undefined") return;
+        vi.ed.moveTo(curL.start)
+
+        const nextW = vi.ed.nextWord();
+        if (typeof(nextW) !== "undefined") {
+            vi.ed.moveTo(nextW.start);
+        }
+    }))
     .add("$", new KeyNode((vi: VI, c: number) => {
         if ( c > 1 ) { vi.ed.moveV(c-1) }
         const curL = vi.ed.line();
