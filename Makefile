@@ -34,7 +34,8 @@ ${BIN}: ${SRC} ${SRC_MOD} ${SRC_TMPL} ${SRC_TEST}
 	${GO} build -ldflags "${LDFLAGS}" -o $@
 
 ${VIJS}: ${VIJS_SRC}
-	cd ${VIJS_PRJ} && npm run -s lint -- --quiet
+	cd ${VIJS_PRJ} && npm run -s fmt
+	cd ${VIJS_PRJ} && npm run -s check
 	cd ${VIJS_PRJ} && npm run -s build
 
 ${VIJSMIN}: ${VIJS}

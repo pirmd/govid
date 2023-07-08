@@ -4,14 +4,11 @@
     "@typescript-eslint/parser": "^5.47.1",
     "eslint": "^8.30.0",
     "jsmin": "^1.0.1",
+    "prettier": "^3.0.0",
     "typescript": "^4.9.4"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2016,
-      "sourceType": "module"
-    },
     "plugins": [
       "@typescript-eslint"
     ],
@@ -20,14 +17,17 @@
       "plugin:@typescript-eslint/eslint-recommended",
       "plugin:@typescript-eslint/recommended"
     ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "off"
+    },
     "env": {
-      "browser": true,
-      "es2016": true
+      "browser": true
     }
   },
   "scripts": {
-    "build": "tsc",
-    "lint": "eslint --fix --ext .ts src/",
+    "build": "tsc --outfile vi.js",
+    "check": "tsc --noEmit && eslint --fix --ext .ts src/",
+    "fmt": "prettier --write src/",
     "minify": "jsmin -o vi.min.js vi.js"
   }
 }
