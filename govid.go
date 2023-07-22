@@ -34,6 +34,7 @@ type File struct {
 	Filename string
 	Content  string
 	Entries  []os.DirEntry
+	URL      string
 }
 
 // Name returns File base name.
@@ -43,6 +44,8 @@ func (f File) Name() string {
 
 // PathComponents splits File's Filename into its individual path components.
 func (f File) PathComponents() []*File {
+	scriptname, _ := strings.CutSuffix(f.URL, f.Filename)
+
 	c := []*File{}
 	p := splitPath(f.Filename)
 
@@ -50,11 +53,13 @@ func (f File) PathComponents() []*File {
 		if i == 0 {
 			c = append(c, &File{
 				Filename: p[i],
+				URL:      path.Join(scriptname, p[i]),
 			})
 			continue
 		}
 		c = append(c, &File{
 			Filename: path.Join(c[i-1].Filename, p[i]),
+			URL:      path.Join(c[i-1].URL, p[i]),
 		})
 	}
 
@@ -63,16 +68,18 @@ func (f File) PathComponents() []*File {
 
 // WebApp represents govid application.
 type WebApp struct {
-	NotesDir  string
-	Templates *template.Template
+	ScriptName string
+	NotesDir   string
+	Templates  *template.Template
 }
 
 // NewWebApp creates a new WebApp providing govid services for notes found in notesdir.
 // Notes content are rendered using templates from tmplFS's 'templates' subdir.
-func NewWebApp(notesdir string) *WebApp {
+func NewWebApp(notesdir string, scriptname string) *WebApp {
 	log.Printf("serve notes from '%s'", notesdir)
 	return &WebApp{
-		NotesDir: notesdir,
+		NotesDir:   notesdir,
+		ScriptName: scriptname,
 		Templates: template.Must(
 			template.New("govid").ParseFS(tmplFS, "templates/*.gotmpl"),
 		),
@@ -81,7 +88,7 @@ func NewWebApp(notesdir string) *WebApp {
 
 // GetHandlerFunc is the http.HandlerFunc responsible of getting resources.
 func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	filepath := r.URL.Path
+	filepath, _ := strings.CutPrefix(r.URL.Path, app.ScriptName)
 
 	if !app.isValidPathname(filepath) {
 		log.Printf("cannot access '%s': invalid path name", filepath)
@@ -94,7 +101,10 @@ func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Edit a new File (ie: no content)
-			file := File{Filename: filepath}
+			file := File{
+				Filename: filepath,
+				URL:      path.Join(app.ScriptName, filepath),
+			}
 			app.serveTemplate(w, editorTemplate, file)
 			return
 		}
@@ -119,7 +129,11 @@ func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		dir := File{Filename: filepath, Entries: validEntries}
+		dir := File{
+			Filename: filepath,
+			Entries:  validEntries,
+			URL:      path.Join(app.ScriptName, filepath),
+		}
 		app.serveTemplate(w, browserTemplate, dir)
 		return
 	}
@@ -144,7 +158,11 @@ func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file := File{Filename: filepath, Content: string(content)}
+	file := File{
+		Filename: filepath,
+		Content:  string(content),
+		URL:      path.Join(app.ScriptName, filepath),
+	}
 	app.serveTemplate(w, editorTemplate, file)
 }
 
@@ -152,7 +170,7 @@ func (app WebApp) GetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 func (app WebApp) SaveHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 
-	filepath := r.URL.Path
+	filepath, _ := strings.CutPrefix(r.URL.Path, app.ScriptName)
 	if !app.isValidPathname(filepath) {
 		log.Printf("saving to '%s' failed: invalid  path name", filepath)
 		http.Error(w, "400 Bad Request", http.StatusBadRequest)

@@ -53,6 +53,9 @@ Supported request are:
 + `POST /{filename}`:: save file or folder located at {filename} path within
   the directory `govid` instance is serving.
 
+{filename} corresponds to DOCUMENT_URI CGI environement variable without the
+SCRIPT_NAME prefix (corresponds to PATH_INFO content). 
+
 `govid` only accepts {filename} that lives inside govid's directory, it will
 reject any path directives (like ../ or absolute path) that will try to save or
 access files outside of this folder.

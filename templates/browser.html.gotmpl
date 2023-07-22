@@ -9,9 +9,9 @@
         <title>{{.Filename}}</title>
     </head>
     <body>
-        <nav>{{range .PathComponents}}/<a href="/{{.Filename}}">{{.Name}}</a>{{end}}</nav>
+        <nav>{{range .PathComponents}}/<a href="{{.URL}}">{{.Name}}</a>{{end}}</nav>
         <ul>
-            {{range .Entries}}<li><a href="{{$.Filename}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a>{{end}}
+            {{range .Entries}}<li><a href="{{$.URL}}/{{.Name}}">{{.Name}}{{if .IsDir}}/{{end}}</a>{{end}}
         </ul>
     </body>
 </html>

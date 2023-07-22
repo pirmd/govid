@@ -129,7 +129,7 @@ func TestIsValidPathname(t *testing.T) {
 		{"test/.test1.txt", false},
 	}
 
-	testApp := NewWebApp("root")
+	testApp := NewWebApp("root", "")
 	for _, tc := range testCases {
 		got := testApp.isValidPathname(tc.in)
 		if got != tc.want {
@@ -153,7 +153,7 @@ func TestFullpath(t *testing.T) {
 		{"test/../../test1", path.Join("root", "test1")},
 	}
 
-	testApp := NewWebApp("root")
+	testApp := NewWebApp("root", "")
 	for _, tc := range testCases {
 		got := testApp.fullpath(tc.in)
 		if got != tc.want {
@@ -313,16 +313,19 @@ func setup(t *testing.T) (*WebApp, map[string]string) {
 		}
 	}
 
-	return NewWebApp(notesdir), testCases
+	return NewWebApp(notesdir, "/cgi-bin/govid"), testCases
 }
 
 func buildTmpl(testApp *WebApp, filename string) (string, error) {
-	path := path.Join(testApp.NotesDir, filename)
+	filepath := path.Join(testApp.NotesDir, filename)
 
 	want := new(bytes.Buffer)
-	file := &File{Filename: "/" + filename}
+	file := &File{
+		Filename: path.Join("/", filename),
+		URL:      path.Join("/cgi-bin/govid", filename),
+	}
 
-	fi, err := os.Stat(path)
+	fi, err := os.Stat(filepath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			if err := testApp.Templates.ExecuteTemplate(want, editorTemplate, file); err != nil {
@@ -334,7 +337,7 @@ func buildTmpl(testApp *WebApp, filename string) (string, error) {
 	}
 
 	if fi.IsDir() {
-		entries, err := os.ReadDir(path)
+		entries, err := os.ReadDir(filepath)
 		if err != nil {
 			return "", err
 		}
@@ -346,7 +349,7 @@ func buildTmpl(testApp *WebApp, filename string) (string, error) {
 		return want.String(), nil
 	}
 
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(filepath)
 	if err != nil {
 		return "", err
 	}

@@ -12,8 +12,8 @@ func main() {
 	if notesdir == "" {
 		notesdir = os.Getenv("DOCUMENT_ROOT")
 	}
-
-	app := NewWebApp(notesdir)
+	scriptname := os.Getenv("SCRIPT_NAME")
+	app := NewWebApp(notesdir, scriptname)
 
 	notesHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
