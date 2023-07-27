@@ -6,6 +6,7 @@
 - Fix misbehavior of vi.js 'dd' command.
 - Fix non working vi.js ':wq' command.
 - Fix misbehavior of vi.js 'Tab' in INSERT mode.
+- Fix misbehavior of vi.js 'O' command.
 - Filter out entries with invalid filename when listing folder content.
 - Normalize new lines to unix representation when saving node content.
 - Add to vi.js ':e' command support to open notes relative to current path.

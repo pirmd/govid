@@ -261,7 +261,8 @@ const commands = new KeyNode()
       const curL = vi.ed.line();
       if (typeof curL === "undefined") return;
 
-      vi.ed.insert("\n", curL.start);
+      vi.ed.moveTo(curL.start);
+      vi.ed.insert("\n");
       vi.setMode("INSERT");
     }),
   )
