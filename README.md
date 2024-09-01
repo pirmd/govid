@@ -1,7 +1,7 @@
 # GOVID - Go VI Daemon
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/pirmd/govid.svg)](https://pkg.go.dev/github.com/pirmd/govid)
-[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/rvi)](https://goreportcard.com/report/github.com/pirmd/govid)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/govid)](https://goreportcard.com/report/github.com/pirmd/govid)
 
 `govid` is a CGI application to remotely edit a bunch of text files in a
 as-close-as-possible vi fashion. It aims mainly at taking/reading quick notes
@@ -25,7 +25,7 @@ like Windows might work through some features might not be properly supported
 
 ## INSTALLATION AND DEPLOYMENT
 To install `govid` CGI application, you can use:
-̀``shell
+```shell
 make install
 ```
 
@@ -36,14 +36,13 @@ By default it will install:
 
 where ${PREFIX} default to /var/www, ${CGIDIR} to ${PREFIX/cgi-bin} and
 ${HTDOCS} to ${PREFIX}/htdocs/govid. Each of these parameters can be altered
-when invoquing
-`make install`, for example:
+when invoking `make install`, for example:
 ```shell
 make install PREFIX=my/prefered/www/location
 ```
 ## CONFIGURATION
 `govid` will serve notes from the location contained in GODIR_NOTESDIR
-environement variable or, if not set, from DOCUMENT_ROOT.
+environment variable or, if not set, from DOCUMENT_ROOT.
 
 ## API
 Supported request are:
