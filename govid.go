@@ -80,7 +80,6 @@ type WebApp struct {
 // NewWebApp creates a new WebApp providing govid services for notes found in dir.
 // Notes content are rendered using templates from tmplFS's 'templates' subdir.
 func NewWebApp(dir string, prefix string) *WebApp {
-	log.Printf("serve notes from '%s'", dir)
 	return &WebApp{
 		RootDir:   dir,
 		URLPrefix: prefix,
