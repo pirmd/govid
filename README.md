@@ -44,6 +44,8 @@ make install PREFIX=my/prefered/www/location
 `govid` will serve notes from the location contained in GODIR_NOTESDIR
 environment variable or, if not set, from DOCUMENT_ROOT.
 
+URL prefix can be adjusted by setting GODIR_URL_PREFIX.
+
 ## API
 Supported request are:
 + `GET /{filename}`:: view/edit file or folder located at {filename} path

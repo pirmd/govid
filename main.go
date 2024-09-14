@@ -8,12 +8,17 @@ import (
 )
 
 func main() {
-	notesdir := os.Getenv("GOVID_NOTESDIR")
-	if notesdir == "" {
-		notesdir = os.Getenv("DOCUMENT_ROOT")
+	dir := os.Getenv("GOVID_DIR")
+	if dir == "" {
+		dir = os.Getenv("DOCUMENT_ROOT")
 	}
-	scriptname := os.Getenv("SCRIPT_NAME")
-	app := NewWebApp(notesdir, scriptname)
+
+	prefix := os.Getenv("GOVID_URL_PREFIX")
+	if prefix == "" {
+		prefix = os.Getenv("SCRIPT_NAME")
+	}
+
+	app := NewWebApp(dir, prefix)
 
 	notesHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

@@ -13,6 +13,7 @@
   of /var/www/htdocs.
 - Add GOVID_NOTESDIR environment variable to configure the notes folder that
   govid shall serve.
+- Add GOVID_URL_PREFIX environment variable to configure the URL PREFIX.
 - Add support for deadkey detection to vi.js. Introduce '^' command to move to
   first word of the current line.
 

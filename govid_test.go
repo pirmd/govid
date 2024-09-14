@@ -267,7 +267,7 @@ func TestSaveHandler(t *testing.T) {
 
 		// Check that original note is not modified
 		if tc.outStatus != http.StatusOK {
-			fi, err := os.Stat(path.Join(testApp.NotesDir, tc.inFilename))
+			fi, err := os.Stat(path.Join(testApp.RootDir, tc.inFilename))
 			if err != nil {
 				t.Fatalf("Fail to read content for %s: %#v", tc.inFilename, err)
 			}
@@ -275,7 +275,7 @@ func TestSaveHandler(t *testing.T) {
 				continue
 			}
 
-			content, err := os.ReadFile(path.Join(testApp.NotesDir, tc.inFilename))
+			content, err := os.ReadFile(path.Join(testApp.RootDir, tc.inFilename))
 			if err != nil {
 				t.Fatalf("Fail to read content for %s: %v", tc.inFilename, err)
 			}
@@ -317,12 +317,12 @@ func setup(t *testing.T) (*WebApp, map[string]string) {
 }
 
 func buildTmpl(testApp *WebApp, filename string) (string, error) {
-	filepath := path.Join(testApp.NotesDir, filename)
+	filepath := path.Join(testApp.RootDir, filename)
 
 	want := new(bytes.Buffer)
 	file := &File{
-		Filename: path.Join("/", filename),
-		URL:      path.Join("/cgi-bin/govid", filename),
+		Filename:  path.Join("/", filename),
+		URLPrefix: "/cgi-bin/govid",
 	}
 
 	fi, err := os.Stat(filepath)

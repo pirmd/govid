@@ -9,7 +9,7 @@
         <title>{{.Filename}}</title>
     </head>
     <body>
-        <nav>{{range .PathComponents}}/<a href="{{.URL}}">{{.Name}}</a>{{end}}</nav>
+        <nav><a href="{{.URLPrefix}}">&#x2302</a>{{range .PathComponents}}/<a href="{{.URL}}">{{.Name}}</a>{{end}}</nav>
         <form method="POST" action="{{.URL}}">
             <textarea name="content" autofocus>{{.Content}}</textarea>
             <div><input value="Save" type="submit">&emsp;<input id="status"></input></div>
