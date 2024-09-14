@@ -9,9 +9,9 @@ LDFLAGS        = ${LDFLAGS_STATIC} -w -s
 
 BIN       = govid
 SRC_MOD   = go.mod
-SRC      != go list -f '{{join .GoFiles " "}}'
-SRC_TEST != go list -f '{{join .TestGoFiles " "}}'
-SRC_TMPL != ls templates/*
+SRC       != ${GO} list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}' ./...
+SRC_TEST  != ${GO} list -f '{{range .TestGoFiles}}{{$$.Dir}}/{{.}} {{end}}' ./...
+SRC_EMBED != ${GO} list -f '{{range .EmbedFiles}}{{$$.Dir}}/{{.}} {{end}}' ./...
 
 VIJS_PRJ = vi.js
 VIJS_SRC != ls ${VIJS_PRJ}/src/*.ts
@@ -23,15 +23,22 @@ ASSETS += ${VIJSMIN}
 
 .PHONY: all clean dev-dep 
 
-all: ${BIN} ${ASSETS}
+all: audit ${BIN} ${ASSETS}
 
-${BIN}: ${SRC} ${SRC_MOD} ${SRC_TMPL} ${SRC_TEST}
+${BIN}: ${SRC} ${SRC_MOD} ${SRC_EMBED} ${SRC_TEST}
 	${GO} fmt ./...
-	staticcheck ./...
-	errcheck ./...
-	gosec -quiet ./...
+	${GO} mod tidy -v
+	${GO} mod verify
 	${GO} test -vet=all ./...
 	${GO} build -ldflags "${LDFLAGS}" -o $@
+	@grep -xq "$@" .gitignore || echo $@ >> .gitignore
+
+audit: ${SRC} ${SRC_MOD}
+	${GO} run honnef.co/go/tools/cmd/staticcheck@latest ./...
+	${GO} run github.com/kisielk/errcheck@latest ./...
+	${GO} run github.com/securego/gosec/v2/cmd/gosec@latest -quiet ./...
+	${GO} run golang.org/x/vuln/cmd/govulncheck@latest ./...
+.PHONY: audit
 
 ${VIJS}: ${VIJS_SRC}
 	cd ${VIJS_PRJ} && npm run -s fmt
@@ -55,10 +62,5 @@ clean:
 	-rm -f ${BIN} ${VIJS} ${VIJSMIN}
 
 dev-dep:
-	@echo "* Install go verification tools"
-	go install honnef.co/go/tools/cmd/staticcheck@latest
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install github.com/kisielk/errcheck@latest
-
 	@echo "* Install Typescript developpement environnement"
 	cd ${VIJS_PRJ} && npm clean-install
