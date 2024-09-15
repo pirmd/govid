@@ -1,5 +1,5 @@
 # Changelog
-## [0.3.1] - unreleased
+## [0.3.1] - 2024-09-15
 - Fix CGI DOCUMENT_URI usage by removing any SCRIPT_NAME prefix.
 - Fix browser's template that improperly build links to resources.
 - Fix vi.js "J" command improper behavior.
