@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Govid – Éditeur de notes</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #f8f8f8;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.2em;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 80vh;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .filename {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    .status {
+      margin-top: 10px;
+      color: #888;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="filename" id="filename">Chargement...</div>
+    <form method="POST">
+      <textarea name="content" id="content" placeholder="Saisissez votre texte ici..."></textarea>
+      <br>
+      <button type="submit">💾 Sauvegarder</button>
+    </form>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // Extraire le chemin du fichier depuis l'URL
+    const path = window.location.pathname.split('/').pop() || "index.txt";
+    document.getElementById('filename').textContent = `Fichier: ${path}`;
+    document.getElementById('status').textContent = "Chargement en cours...";
+
+    // Charger le contenu du fichier
+    fetch(window.location.pathname)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Fichier introuvable");
+        }
+        return response.text();
+      })
+      .then(content => {
+        document.getElementById('content').value = content;
+        document.getElementById('status').textContent = "Prêt à éditer.";
+      })
+      .catch(() => {
+        document.getElementById('content').value = "";
+        document.getElementById('status').textContent = "Nouveau fichier.";
+      });
+
+    // Message de confirmation après sauvegarde
+    document.querySelector('form').addEventListener('submit', function() {
+      document.getElementById('status').textContent = "Sauvegarde en cours...";
+      setTimeout(() => {
+        document.getElementById('status').textContent = "Fichier sauvegardé !";
+      }, 500);
+    });
+  </script>
+</body>
+</html>

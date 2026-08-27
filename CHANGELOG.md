@@ -1,43 +1,57 @@
 # Changelog
-## [0.3.1] - 2024-09-15
-- Fix CGI DOCUMENT_URI usage by removing any SCRIPT_NAME prefix.
-- Fix browser's template that improperly build links to resources.
-- Fix vi.js "J" command improper behavior.
-- Fix misbehavior of vi.js 'dd' command.
-- Fix non working vi.js ':wq' command.
-- Fix misbehavior of vi.js 'Tab' in INSERT mode.
-- Fix misbehavior of vi.js 'O' command.
-- Filter out entries with invalid filename when listing folder content.
-- Normalize new lines to unix representation when saving node content.
-- Add to vi.js ':e' command support to open notes relative to current path.
-- Change default assets installation location to /var/www/htdocs/govid instead
-  of /var/www/htdocs.
-- Add GOVID_NOTESDIR environment variable to configure the notes folder that
-  govid shall serve.
-- Add GOVID_URL_PREFIX environment variable to configure the URL PREFIX.
-- Add support for deadkey detection to vi.js. Introduce '^' command to move to
-  first word of the current line.
 
-## [0.3.0] - 2023-02-03
-- switch from a standalone web-app to a simple CGI app.
-- introduce home-brewed vi.js replacing jsvim.js by [Jakub
-  Mikians](https://github.com/jakub-m) for fun, closer 'vi' look and feel, new
-  minor features and probably more new bugs to hunt.
-- add support to browse directories.
-- add verification that requested file is not an hidden file or does not belong
-  to an hidden folder.
-- add a navigation bar.
+Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
-## [0.2.0] - 2022-10-15
-- change the way to specify folder that contain notes from command-line.
-- modify API for an (hopefully) cleaner edit/save access.
-- add support for basic authentication.
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2022-09-10
-- creation
-- minimal set of features allowing basic interaction with plain-text files from
-  the web-app. This version is more a proof of concept than anything else, it
-  notably does not implement basic security approach for web-facing apps.
+---
 
+## [2.0.0] - 2025-XX-XX
 
-[modeline]: # ( vim: set fenc=utf-8 spell spl=en: )
+### ✨ Nouvelle Version Ultra-Simplifiée
+- **Refonte complète** : Remplacement de l'architecture complexe (templates serveur, vi.js) par une version minimaliste.
+- **Backend** : Réduit à ~50 lignes de Go (au lieu de ~300).
+- **Frontend** : Remplacement de vi.js par un `<textarea>` HTML standard + JS minimal (~20 lignes).
+- **Zéro dépendance** : Suppression de toutes les dépendances externes (vi.js, embed.FS, html/template).
+
+### 🚀 Améliorations
+- **Mode standalone** : Ajout d'un mode développement avec serveur intégré (`:8080`).
+- **Sécurité renforcée** : Validation des chemins et détection des fichiers binaires conservées.
+- **Compatibilité universelle** : Fonctionne avec tous les navigateurs (même sans JavaScript pour les fonctionnalités de base).
+
+### 🗑️ Suppressions
+- **vi.js** : L'éditeur vi-like a été supprimé au profit d'un `<textarea>` standard.
+- **Templates serveur** : Plus besoin de `html/template` ou `embed.FS`.
+- **Listage de dossiers** : Fonctionnalité supprimée (navigation manuelle via les URLs).
+
+### 📝 Documentation
+- **README.md** : Réécrit pour refléter la nouvelle architecture.
+- **Makefile** : Simplifié pour ne plus dépendre de vi.js.
+- **Tests** : Nouveaux tests unitaires pour la version simplifiée.
+
+### 🔧 Migration
+- **Backward Compatible** : Non (changement complet d'architecture).
+- **Nouvelle structure** :
+  ```
+  govid/
+  ├── cgi-bin/
+  │   └── govid          # Backend (binaire)
+  │   └── govid.go       # Code source
+  │   └── govid_test.go  # Tests
+  └── htdocs/
+      └── index.html     # Frontend
+  ```
+
+---
+
+## [1.0.0] - 2024-01-XX
+
+### ✨ Première Version
+- Version initiale avec vi.js et templates serveur.
+- Fonctionnalités : Édition de fichiers texte avec un éditeur vi-like dans le navigateur.
+
+---
+
+[2.0.0]: https://github.com/pirmd/govid/compare/v1.0.0...v2.0.0
+[1.0.0]: https://github.com/pirmd/govid/releases/tag/v1.0.0

@@ -1,85 +1,216 @@
-# GOVID - Go VI Daemon
+# GOVID - Éditeur de Notes Ultra-Simplifié
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/pirmd/govid.svg)](https://pkg.go.dev/github.com/pirmd/govid)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pirmd/govid)](https://goreportcard.com/report/github.com/pirmd/govid)
 
-`govid` is a CGI application to remotely edit a bunch of text files in a
-as-close-as-possible vi fashion. It aims mainly at taking/reading quick notes
-in environment I'm not in control of (i.e. no ssh to my cloud server, or no vi)
-using a simple browser.
+`govid` est une application **ultra-minimaliste** pour éditer des fichiers texte directement depuis un navigateur.
+Cette version simplifiée se concentre sur l'essentiel : **un éditeur de texte basique, sans dépendances inutiles**.
 
-Compared to already existing full-features note-taking app, `govid` is really
-basic, build for a personal note taking perspective with no bells nor whistles.
-It tries to offer an "as quick and simple way" to quickly take notes (open
-whatever browser you find, connect to your server pointing to the file you'll
-like to edit, edit it).
+## 🎯 Fonctionnalités
+- ✅ **Édition de fichiers texte** via un navigateur
+- ✅ **Création automatique de dossiers**
+- ✅ **Validation de sécurité** (path traversal, fichiers cachés, fichiers binaires)
+- ✅ **Limite de taille** (1 Mo par fichier)
+- ✅ **Mode CGI** (Apache/Nginx) et **mode standalone** (développement)
+- ✅ **Zéro dépendance JavaScript** (fonctionne même sans JS, mais le préchargement nécessite JS)
 
-`govid` design is intentionally kept as minimal as possible, leaving most of
-the heavy work to whatever battle-tested http stack you want to use to deploy
-it. 
+## 🚀 Installation
 
-`govid` is developed and used on OpenBSD, it is most probably going to operate
-smoothly on any unix-like environment. Running `govid` on other plat-forms
-like Windows might work through some features might not be properly supported
-(like path validation logic).
+### Dépendances
+- [Go 1.17+](https://golang.org/dl/) (pour le build)
+- Un serveur web (Apache, Nginx, Caddy) **ou** aucun serveur pour le mode standalone
 
-## INSTALLATION AND DEPLOYMENT
-To install `govid` CGI application, you can use:
-```shell
-make install
+### Build
+```bash
+make
+```
+Cela génère le binaire `cgi-bin/govid`.
+
+### Déploiement avec Apache
+1. Installez Apache et activez le module CGI :
+   ```bash
+   sudo apt install apache2
+   sudo a2enmod cgi
+   ```
+
+2. Configurez Apache pour utiliser `govid` :
+   ```apache
+   # /etc/apache2/sites-available/govid.conf
+   ScriptAlias /govid/ /var/www/cgi-bin/
+   <Directory "/var/www/cgi-bin">
+       AllowOverride None
+       Options +ExecCGI
+       Require all granted
+       SetEnv GOVID_DIR "/var/www/notes"
+       SetEnv GOVID_URL_PREFIX "/govid"
+   </Directory>
+   
+   Alias /govid/static/ /var/www/htdocs/govid/
+   <Directory "/var/www/htdocs/govid">
+       Require all granted
+   </Directory>
+   ```
+
+3. Installez govid :
+   ```bash
+   sudo make install
+   ```
+
+4. Redémarrez Apache :
+   ```bash
+   sudo systemctl restart apache2
+   ```
+
+5. Accédez à [http://votre-serveur/govid/nom-du-fichier.txt](http://votre-serveur/govid/nom-du-fichier.txt)
+
+### Déploiement avec Nginx
+1. Installez Nginx et fcgiwrap :
+   ```bash
+   sudo apt install nginx fcgiwrap
+   sudo systemctl start fcgiwrap.socket
+   sudo systemctl enable fcgiwrap.socket
+   ```
+
+2. Configurez Nginx :
+   ```nginx
+   # /etc/nginx/sites-available/govid
+   server {
+       listen 80;
+       server_name votre-serveur.com;
+
+       location /govid/ {
+           fastcgi_pass unix:/var/run/fcgiwrap.socket;
+           include fastcgi_params;
+           fastcgi_param SCRIPT_FILENAME /var/www/cgi-bin/govid;
+           fastcgi_param GOVID_DIR /var/www/notes;
+           fastcgi_param GOVID_URL_PREFIX /govid;
+           fastcgi_param PATH_INFO $fastcgi_path_info;
+       }
+
+       location /govid/static/ {
+           alias /var/www/htdocs/govid/;
+       }
+   }
+   ```
+
+3. Installez govid :
+   ```bash
+   sudo make install
+   ```
+
+4. Redémarrez Nginx :
+   ```bash
+   sudo systemctl restart nginx
+   ```
+
+### Mode Standalone (Développement)
+Pour tester localement sans serveur web :
+```bash
+make run
+```
+→ Accédez à [http://localhost:8080/nom-du-fichier.txt](http://localhost:8080/nom-du-fichier.txt)
+
+Les notes seront stockées dans le dossier `./notes` (relatif au binaire).
+
+## 📁 Structure du Projet
+```
+govid/
+├── cgi-bin/
+│   └── govid          # Backend (binaire Go)
+│   └── govid.go       # Code source du backend
+│   └── govid_test.go  # Tests unitaires
+├── htdocs/
+│   └── index.html     # Frontend (HTML + JS minimal)
+├── Makefile           # Scripts de build et installation
+└── README.md          # Documentation
 ```
 
-By default it will install:
-- `govid` CGI application to ${CGIDIR} as well as its dependant libraries so
-  that it can be run chrooted in ${PREFIX}.
-- CSS and JS assets in ${HTDOCS}
+## 🛡️ Sécurité
+`govid` implémente les protections suivantes :
 
-where ${PREFIX} default to /var/www, ${CGIDIR} to ${PREFIX/cgi-bin} and
-${HTDOCS} to ${PREFIX}/htdocs/govid. Each of these parameters can be altered
-when invoking `make install`, for example:
-```shell
-make install PREFIX=my/prefered/www/location
+| Menace | Protection |
+|--------|-------------|
+| **Path Traversal** (`../etc/passwd`) | Validation des chemins avec `strings.Contains(filepath, "..")` |
+| **Accès aux fichiers cachés** (`.bashrc`, `.git/`) | Blocage des chemins commençant par `/.` |
+| **Fichiers binaires** | Détection des bytes nuls (`0x00`) |
+| **Taille excessive** | Limite à **1 Mo** par fichier |
+| **Écriture en dehors de `GOVID_DIR`** | Vérification que le chemin absolu commence par `GOVID_DIR` |
+
+**Recommandations supplémentaires :**
+- Utilisez **HTTPS** en production.
+- Configurez les **permissions** du dossier de notes :
+  ```bash
+  chown -R www-data:www-data /var/www/notes
+  chmod 750 /var/www/notes
+  ```
+- Pour une **authentification basique**, utilisez un reverse proxy (Nginx, Apache) ou un `.htaccess`.
+
+## 📂 Variables d'Environnement
+
+| Variable | Description | Valeur par défaut | Exemple |
+|----------|-------------|------------------|---------|
+| `GOVID_DIR` | Dossier où sont stockées les notes | `DOCUMENT_ROOT` ou `./notes` | `/var/www/notes` |
+| `GOVID_URL_PREFIX` | Préfixe URL pour accéder à govid | `SCRIPT_NAME` | `/govid` |
+| `DOCUMENT_ROOT` | (Apache) Racine des documents | - | `/var/www/html` |
+
+## 📖 Utilisation
+
+### Éditer un fichier
+1. Accédez à l'URL du fichier :
+   ```
+   http://votre-serveur/govid/notes.txt
+   ```
+2. Modifiez le texte dans l'éditeur.
+3. Cliquez sur **Sauvegarder**.
+
+### Créer un nouveau fichier
+- Accédez à une URL inexistante :
+  ```
+  http://votre-serveur/govid/nouveau-fichier.txt
+  ```
+- L'éditeur s'ouvrira avec un contenu vide.
+- Sauvegardez pour créer le fichier.
+
+### Créer un dossier
+- Utilisez un chemin avec des sous-dossiers :
+  ```
+  http://votre-serveur/govid/dossier/nouveau-fichier.txt
+  ```
+- Les dossiers parents seront créés automatiquement.
+
+### Fichier par défaut
+- Si vous accédez à la racine (`/govid/`), le fichier `index.txt` sera ouvert.
+
+## 🧪 Tests
+Pour exécuter les tests unitaires :
+```bash
+make test
 ```
-## CONFIGURATION
-`govid` will serve notes from the location contained in GODIR_NOTESDIR
-environment variable or, if not set, from DOCUMENT_ROOT.
 
-URL prefix can be adjusted by setting GODIR_URL_PREFIX.
+Les tests couvrent :
+- Validation des chemins (path traversal, fichiers cachés)
+- Création de fichiers et dossiers
+- Limite de taille (1 Mo)
+- Détection des fichiers binaires
+- Comportement par défaut (fichier `index.txt`)
 
-## API
-Supported request are:
-+ `GET /{filename}`:: view/edit file or folder located at {filename} path
-  within the directory `govid` instance is serving.
+## 🔧 Audit de Sécurité
+Pour exécuter une analyse de sécurité statique :
+```bash
+make audit
+```
 
-+ `POST /{filename}`:: save file or folder located at {filename} path within
-  the directory `govid` instance is serving.
+Cela exécute :
+- [staticcheck](https://staticcheck.io/) (analyse statique)
+- [errcheck](https://github.com/kisielk/errcheck) (détection des erreurs non gérées)
+- [gosec](https://github.com/securego/gosec) (détection des vulnérabilités)
+- [govulncheck](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck) (détection des vulnérabilités connues)
 
-{filename} corresponds to DOCUMENT_URI CGI environement variable without the
-SCRIPT_NAME prefix (corresponds to PATH_INFO content). 
+## 📜 Changelog
+Consultez [CHANGELOG.md](CHANGELOG.md) pour l'historique des versions.
 
-`govid` only accepts {filename} that lives inside govid's directory, it will
-reject any path directives (like ../ or absolute path) that will try to save or
-access files outside of this folder.
-Addionally, {filename} pointing to hidden files (starting with '.') or files
-living in an hidden folder are not accepted. Note that the logic implemented is
-based on unix-like hidden files and is most certainly not going to operate well
-on Windows.
+## 🤝 Contribution
+Les contributions sont les bienvenues ! Ouvrez une issue ou une pull request sur [GitHub](https://github.com/pirmd/govid).
 
-If {filename} points to a non-existing file, it will be created once saving,
-including any sub-folders. Files and sub-folders are created using the umask of
-the user under which `govid` is running.
-
-Requests for {filename} pointing to files that are believed not to be in
-plaintext mime-type will be rejected. Likewise, POST request with a content
-that does not look-like plaintext will be rejected.
-
-Requests for accessing too big files or trying to save too big content will be
-rejected.
-
-## CONTRIBUTION
-If you feel like to contribute, just follow github guidelines on
-[forking](https://help.github.com/articles/fork-a-repo/) then [send a pull
-request](https://help.github.com/articles/creating-a-pull-request/)
-
-
-[modeline]: # ( vim: set fenc=utf-8 spell spl=en: )
+## 📄 Licence
+Ce projet est sous licence MIT. Consultez [LICENSE](LICENSE) pour plus de détails.
