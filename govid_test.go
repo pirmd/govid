@@ -175,13 +175,13 @@ func TestDefaultFile(t *testing.T) {
 
 	// Simuler une requête GET sur / (devrait retourner index.txt)
 	path := "/"
-	filepath := strings.TrimPrefix(path, "")
-	if filepath == "" || filepath == "/" {
-		filepath = "/index.txt"
+	requestedPath := strings.TrimPrefix(path, "")
+	if requestedPath == "" || requestedPath == "/" {
+		requestedPath = "/index.txt"
 	}
 
-	if filepath != "/index.txt" {
-		t.Errorf("Default file path failed: got '%s', want '/index.txt'", filepath)
+	if requestedPath != "/index.txt" {
+		t.Errorf("Default file path failed: got '%s', want '/index.txt'", requestedPath)
 	}
 }
 
@@ -199,12 +199,12 @@ func TestAbsPath(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		filepath := strings.TrimPrefix(tc.path, tc.prefix)
-		if filepath == "" || filepath == "/" {
-			filepath = "/index.txt"
+		requestedPath := strings.TrimPrefix(tc.path, tc.prefix)
+		if requestedPath == "" || requestedPath == "/" {
+			requestedPath = "/index.txt"
 		}
 
-		absPath := filepath.Join(tmpDir, filepath)
+		absPath := filepath.Join(tmpDir, requestedPath)
 		if absPath != tc.expected {
 			t.Errorf("Abs path failed for '%s': got '%s', want '%s'", tc.path, absPath, tc.expected)
 		}
