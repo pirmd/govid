@@ -28,19 +28,19 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Extraire le chemin du fichier
-		filepath := strings.TrimPrefix(r.URL.Path, prefix)
-		if filepath == "" || filepath == "/" {
-			filepath = "/index.txt" // Fichier par défaut
+		requestedPath := strings.TrimPrefix(r.URL.Path, prefix)
+		if requestedPath == "" || requestedPath == "/" {
+			requestedPath = "/index.txt" // Fichier par défaut
 		}
 
 		// Validation sécurité : bloquer les chemins malveillants
-		if strings.Contains(filepath, "..") || strings.HasPrefix(filepath, "/.") {
+		if strings.Contains(requestedPath, "..") || strings.HasPrefix(requestedPath, "/.") {
 			http.Error(w, "Invalid path", http.StatusBadRequest)
 			return
 		}
 
 		// Chemin absolu
-		absPath := filepath.Join(dir, filepath)
+		absPath := filepath.Join(dir, requestedPath)
 		if !strings.HasPrefix(absPath, filepath.Clean(dir)) {
 			http.Error(w, "Invalid path", http.StatusBadRequest)
 			return
