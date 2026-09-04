@@ -195,7 +195,7 @@ func TestAbsPath(t *testing.T) {
 	}{
 		{"/test.txt", "", "/tmp/govid/test.txt"},
 		{"/dossier/fichier.txt", "/govid", "/tmp/govid/dossier/fichier.txt"},
-		{"", "", "/tmp/govid/"},
+		{"", "", "/tmp/govid/index.txt"},
 	}
 
 	for _, tc := range testCases {
